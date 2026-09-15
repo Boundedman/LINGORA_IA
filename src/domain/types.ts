@@ -1,0 +1,11 @@
+export const levels = ['A1','A2','B1','B2'] as const;
+export type Level = typeof levels[number];
+export const skills = ['vocabulary','grammar','reading','listening','writing','speaking','pronunciation'] as const;
+export type Skill = typeof skills[number];
+export const skillNames: Record<Skill,string> = { vocabulary:'Vocabulario', grammar:'Gramática', reading:'Lectura', listening:'Listening', writing:'Escritura', speaking:'Expresión oral', pronunciation:'Pronunciación' };
+export type Exercise = { id:string; kind:'choice'|'text'|'writing'|'speaking'; prompt:string; choices?:string[]; answer?:string; explanation:string; transcript?:string };
+export type Lesson = { id:string; level:Level; skill:Skill; title:string; subtitle:string; minutes:number; objective:string; explanation:string; examples:string[]; vocabulary:{word:string;translation:string}[]; exercises:Exercise[]; prerequisite:string|null };
+export type Progress = { lesson_id:string; step:number; completed:boolean; correct:number; attempts:number; version:number };
+export type Profile = { id:string; display_name:string; level:Level|'C1'|'C2'; level_source:'declared'|'estimated'; interest:string; daily_minutes:number; onboarded:boolean };
+export type Review = { id:string; front:string; back:string; next_review:string; interval_days:number; ease:number; repetitions:number; version:number };
+export type Diagnostic = { id:string; answers:Record<string,string>; elapsed_seconds:number; active:boolean; version:number; completed:boolean; updated_at:string };

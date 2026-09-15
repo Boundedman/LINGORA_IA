@@ -1,0 +1,15 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {isCorrect,scheduleReview,nextLesson,remainingSeconds,estimateSkill} from '../src/domain/learning';
+import {curriculum} from '../src/data/curriculum';
+import {chooseQuestion} from '../src/data/assessment';
+import {buildContext,requestSchema,retrieve} from '../server/ai';
+import type {Profile} from '../src/domain/types';
+test('normalizes learner punctuation without accepting a different answer',()=>{assert.equal(isCorrect('  IS. ','is'),true);assert.equal(isCorrect('was','is'),false);});
+test('SRS schedules recall and failure without an AI call',()=>{assert.equal(scheduleReview(0,0,2.5,4).interval_days,1);assert.equal(scheduleReview(1,1,2.5,4).interval_days,6);assert.equal(scheduleReview(2,6,2.5,5).interval_days,15);assert.equal(scheduleReview(3,15,1.3,0).repetitions,0);assert.equal(scheduleReview(3,15,1.3,0).ease,1.3);});
+test('resumes an unfinished lesson before suggesting another',()=>{assert.equal(nextLesson(curriculum,[{lesson_id:'a1-grammar',step:1,completed:false,correct:1,attempts:1,version:1}],'A1')?.id,'a1-grammar');});
+test('diagnostic time is bounded and evidence is not fabricated',()=>{assert.equal(remainingSeconds(950),0);assert.equal(remainingSeconds(-30),900);assert.equal(estimateSkill([{level:'B2',correct:true}]).level,null);});
+test('adaptive sample gets easier after a wrong answer and harder after a correct one',()=>{assert.equal(chooseQuestion({})?.id,'a2-vocabulary');assert.equal(chooseQuestion({'a2-vocabulary':'wrong'})?.id,'a1-vocabulary');assert.equal(chooseQuestion({'a2-vocabulary':'boleto'})?.id,'b2-vocabulary');});
+test('catalog covers each agreed level and all seven areas with usable activities',()=>{assert.equal(new Set(curriculum.map(l=>l.id)).size,28);for(const level of ['A1','A2','B1','B2'])assert.equal(curriculum.filter(l=>l.level===level).length,7);for(const l of curriculum){assert.ok(l.exercises.length>0);for(const e of l.exercises){if(e.kind==='choice')assert.ok(e.choices?.includes(e.answer!));if(e.kind==='text')assert.ok(e.answer);}}});
+test('context contains bounded relevant knowledge rather than the whole curriculum',()=>{const profile={level:'A1',level_source:'declared',interest:'Viajes'} as Profile;const context=buildContext(profile,'for since','b1-grammar',[],Array.from({length:100},()=>({role:'user',content:'x'.repeat(10000)})));assert.ok(Buffer.byteLength(context)<8000);assert.equal(JSON.parse(context).knowledge.length,1);assert.ok(JSON.parse(context).recent.length<=6);assert.equal(retrieve('for since').length<=2,true);});
+test('AI input rejects oversized requests and unsupported operations',()=>{assert.equal(requestSchema.safeParse({operation:'tutor',message:'x'.repeat(2001)}).success,false);assert.equal(requestSchema.safeParse({operation:'delete',message:'hi'}).success,false);});

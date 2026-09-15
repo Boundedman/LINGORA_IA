@@ -1,0 +1,41 @@
+import {useEffect,useRef,useState} from 'react';
+import {Pause,Play,Clock} from 'lucide-react';
+import type {Learner} from '../lib/useLearner';
+import type {Diagnostic,Skill} from '../domain/types';
+import {skillNames} from '../domain/types';
+import {chooseQuestion,questionBank,diagnosticSkills} from '../data/assessment';
+import {estimateSkill,isCorrect,remainingSeconds} from '../domain/learning';
+import {requireDb,api} from '../lib/db';
+import {AudioPractice,Listen} from './AudioPractice';
+export function DiagnosticView({learner,login}:{learner:Learner;login:()=>void}){
+ const [answer,setAnswer]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[active,setActive]=useState(false),[remaining,setRemaining]=useState(900),[feedback,setFeedback]=useState(''),[blob,setBlob]=useState<Blob|null>(null);
+ const latest=useRef(learner.diagnostic),locked=useRef(false);
+ useEffect(()=>{latest.current=learner.diagnostic;setRemaining(remainingSeconds(learner.diagnostic?.elapsed_seconds??0));},[learner.diagnostic]);
+ const diagnostic=learner.diagnostic,answers=diagnostic?.answers??{},question=chooseQuestion(answers);
+ const openSkill:Skill|undefined=question?undefined:!('writing'in answers)?'writing':!('speaking'in answers)?'speaking':!('pronunciation'in answers)?'pronunciation':undefined;
+ const prompt=question?.prompt??(openSkill==='writing'?'Escribe en inglés sobre algo que te interesa aprender y explica por qué. Usa entre 40 y 80 palabras.':openSkill==='speaking'?'Habla durante 30 segundos sobre tu interés principal y una experiencia relacionada.':'Lee en voz alta: “I think learning a new language opens doors. I would like to speak clearly and understand different people.”');
+ async function save(run:boolean,key?:string,value?:string,finish=false){
+  if(locked.current)return;locked.current=true;setBusy(true);setError('');
+  try{const {data,error}=await requireDb().rpc('save_diagnostic',{p_version:latest.current?.version??0,p_active:run,p_key:key??null,p_answer:value??null,p_finish:finish});if(error)throw new Error(error.message.includes('CONFLICT')?'La sesión cambió en otro dispositivo. Recargamos el diagnóstico; pulsa continuar para retomarlo.':'No se pudo guardar el diagnóstico. Se ha pausado.');latest.current=data as Diagnostic;learner.setDiagnostic(data as Diagnostic);setActive(run&&!(data as Diagnostic).completed);if(key){setAnswer('');setBlob(null);setFeedback('');}}
+  catch(e){setActive(false);setError((e as Error).message);await learner.refresh().catch(()=>{});}finally{locked.current=false;setBusy(false);}
+ }
+ const saver=useRef(save);saver.current=save;
+ useEffect(()=>{
+  if(!active)return;
+  const tick=setInterval(()=>setRemaining(s=>Math.max(0,s-1)),1000);
+  const heartbeat=setInterval(()=>void saver.current(true),15000);
+  const visibility=()=>{if(document.hidden)void saver.current(false);};document.addEventListener('visibilitychange',visibility);
+  return()=>{clearInterval(tick);clearInterval(heartbeat);document.removeEventListener('visibilitychange',visibility);};
+ },[active]);
+ useEffect(()=>{if(active&&remaining<=0)void saver.current(false,undefined,undefined,true);},[active,remaining]);
+ // Pause on navigation. The server lease also bounds time if the browser closes abruptly.
+ useEffect(()=>()=>{if(latest.current?.active)void saver.current(false);},[]);
+ async function evaluate(){setBusy(true);setError('');try{
+  let audio: {data:string;mime:string}|undefined;
+  if(blob){if(blob.size>2_000_000)throw new Error('La grabación es demasiado grande. Graba un fragmento más breve.');const buffer=await blob.arrayBuffer();let binary='';for(const byte of new Uint8Array(buffer))binary+=String.fromCharCode(byte);audio={data:btoa(binary),mime:blob.type.split(';')[0]};}
+  const result=await api<{text:string}>('ai',{operation:audio?'audio':'writing',message:`Diagnóstico orientativo. Área: ${openSkill}. Consigna: ${prompt}. Respuesta escrita: ${answer}`,audio});setFeedback(result.text);
+ }catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+ if(!learner.session)return <section className="panel empty"><h1>Conoce tu punto de partida</h1><p>Un diagnóstico breve por habilidades, con pausas y hasta 15 minutos activos. Inicia sesión para conservar tus respuestas.</p><button className="primary" onClick={login}>Entrar para comenzar</button></section>;
+ if(diagnostic?.completed)return <section className="panel"><span className="eyebrow">TU PUNTO DE PARTIDA</span><h1>Un mapa inicial, no una etiqueta</h1><p>Esta muestra breve orienta la práctica. No es una certificación MCER y todavía necesita calibración educativa con participantes reales.</p><div className="skill-grid">{diagnosticSkills.map(skill=>{const items=questionBank.filter(q=>q.skill===skill&&q.id in answers&&answers[q.id]!=='Omitido');const result=estimateSkill(items.map(q=>({level:q.level,correct:isCorrect(answers[q.id],q.answer??'')})));return <div className="skill-card" key={skill}><span>{skillNames[skill]}</span><strong>{result.level??'Pendiente'}</strong><small>{result.level?'Estimación inicial · muestra breve':'Evidencia insuficiente'}</small></div>;})}{(['writing','speaking','pronunciation'] as Skill[]).map(skill=><div className="skill-card" key={skill}><span>{skillNames[skill]}</span><strong>{answers[skill]&&answers[skill]!=='Omitido'?'Practicado':'Pendiente'}</strong><small>Sin nivel automático validado</small>{answers[skill]&&<details><summary>Ver evidencia</summary><p className="preserve">{answers[skill]}</p></details>}</div>)}</div><p>Tu nivel declarado se conserva. Podrás cambiarlo en tu perfil; las lecciones del piloto cubren A1–B2.</p></section>;
+ return <section className="diagnostic-page"><div className="row between wrap"><div><span className="eyebrow">DIAGNÓSTICO INICIAL</span><h1>Descubre dónde empezar</h1></div><span className="timer"><Clock size={18}/>{Math.floor(remaining/60)}:{String(Math.floor(remaining%60)).padStart(2,'0')}</span></div><p>Gramática, vocabulario, lectura, escucha, escritura y práctica oral. Las pausas no consumen el tiempo restante.</p>{!active?<div className="panel empty"><h2>{diagnostic?'Todo listo para continuar':'A tu ritmo, sección por sección'}</h2><p>Guardaremos tus respuestas. La parte oral requiere micrófono; puedes dejarla pendiente. La evaluación fonética precisa no está disponible en este piloto.</p><button className="primary" disabled={busy} onClick={()=>void save(true)}><Play size={17}/> {diagnostic?'Continuar diagnóstico':'Comenzar'}</button></div>:<div className="panel exercise-panel"><div className="row between"><span className="badge">{skillNames[question?.skill??openSkill??'writing']}</span><button className="secondary" disabled={busy} onClick={()=>void save(false)}><Pause size={16}/> Pausar y guardar</button></div><h2>{prompt}</h2>{question?.passage&&<blockquote lang="en">{question.passage}</blockquote>}{question?.audio&&<Listen text={question.audio}/>}<label>{question?.choices?'Elige una respuesta':'Tu respuesta'}{question?.choices?<select value={answer} onChange={e=>setAnswer(e.target.value)}><option value="">Selecciona…</option>{question.choices.map(c=><option key={c}>{c}</option>)}</select>:openSkill==='speaking'||openSkill==='pronunciation'?null:<textarea value={answer} maxLength={4000} rows={5} onChange={e=>setAnswer(e.target.value)}/>}</label>{(openSkill==='speaking'||openSkill==='pronunciation')&&<AudioPractice onAudio={setBlob}/ >}{openSkill&&<><p className="muted">El feedback de IA es opcional y orientativo. Sin él, esta habilidad queda sin nivel estimado.</p><button className="secondary" disabled={busy||(!answer&&!blob)} onClick={()=>void evaluate()}>Enviar {blob?'audio':'texto'} para feedback</button></>}{feedback&&<p className="notice preserve">{feedback}</p>}<div className="row wrap"><button className="primary" disabled={busy||(!answer&&!blob&&!feedback)} onClick={()=>void save(true,question?.id??openSkill,[answer,blob?'Práctica oral realizada; audio no almacenado.':'',feedback].filter(Boolean).join('\n'),openSkill==='pronunciation')}>Guardar y continuar</button><button className="text-button" disabled={busy} onClick={()=>void save(true,question?.id??openSkill,'Omitido',openSkill==='pronunciation')}>Dejar pendiente</button></div></div>}{error&&<p role="alert" className="error">{error}</p>}</section>;
+}
