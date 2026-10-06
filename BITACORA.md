@@ -29,7 +29,8 @@ Registro de solicitudes, ideas y cambios realizados en este proyecto.
   - **Resumen:** Se leyó la propuesta de plataforma de inglés para hispanohablantes, con tutor IA, progresión MCER, currículo, SRS y control de recursos. Se conservó el documento original en el proyecto. No se implementó código.
   - **Archivos modificados:** `BITACORA.md`; creado `PROMPT_ORIGINAL.md`.
 
-- [ ] **2026-09-14 00:56:58 UTC-06:00 — Revisar y afinar los requisitos**
+- [x] **2026-09-14 00:56:58 UTC-06:00 — Revisar y afinar los requisitos**
+  - **Cierre 2026-10-05:** Alcance y criterios de aceptación concretados en docs/ALCANCE.md. La revisión pedagógica con participantes sigue pendiente; no se afirma realizada.
   - **Prompt:**
     > Revisar y afinar los requisitos primero
   - **Resumen:** Revisión en curso. Público inicial confirmado: grupo pequeño con niveles variados. El ingreso permitirá declarar el nivel o realizar un diagnóstico de todas las categorías. Pendiente definir cobertura curricular y criterios de validación educativa. El usuario eligió revisar los requisitos antes de construir la aplicación.
@@ -103,7 +104,8 @@ Registro de solicitudes, ideas y cambios realizados en este proyecto.
   - **Criterio de personalización propuesto:** Guardar el interés en el perfil y permitir cambiarlo desde el chat; adaptar temas y ejemplos conservando objetivos y progresión curricular.
   - **Archivos modificados:** `BITACORA.md`. Sin cambios de código.
 
-- [ ] **2026-09-14 01:14:55 UTC-06:00 — Desarrollar la primera versión**
+- [x] **2026-09-14 01:14:55 UTC-06:00 — Desarrollar la primera versión**
+  - **Cierre 2026-10-05:** Primera versión implementada posteriormente con React, FastAPI y PostgreSQL/SQLite, como documentan las entradas de septiembre. Se conserva el resumen inicial como historia.
   - **Prompt:**
     > muy bien, comienza el desarrollo
   - **Resumen:** Desarrollo iniciado. Se inspeccionó la carpeta: contiene la bitácora y el prompt original, sin código existente. Se preparará una aplicación React/TypeScript, Supabase y funciones de Netlify, con lecciones A1–B2 y tutor por texto. Pendiente implementación, pruebas e integración con servicios reales.
@@ -474,20 +476,23 @@ Se registrarán las nuevas solicitudes de esta conversación con su resultado y 
   - **Resumen:** Confirmado que Vite tiene front como raíz y genera front/dist. Creado netlify.toml raíz con base '.', npm run build, publish front/dist y Node 22. Documentado que solo publica la interfaz; FastAPI necesita alojamiento y conexión API aparte. Compilación completa correcta y archivo publicado verificado. No se ejecutó un deploy remoto.
   - **Archivos modificados:** netlify.toml, README.md y BITACORA.md; artefactos de compilación regenerados.
 
-- [ ] **2026-09-24 18:44:36 UTC-06:00 — FastAPI no disponible en Netlify**
+- [x] **2026-09-24 18:44:36 UTC-06:00 — FastAPI no disponible en Netlify**
+  - **Cierre 2026-10-05:** Resuelto mediante cambio a Cloudflare y conexión con Render, verificadas el 25 y 26 de septiembre. No se volvió a comprobar producción en esta revisión.
   - **Prompt:**
     > ya se hizo el deploy pero me dice que el servidor FastApi no esta disponible
   - **Resumen:** Revisados netlify.toml y front/src/lib/db.ts: se publica solo front/dist y las solicitudes relativas /api no tienen proxy ni backend desplegado configurado. Solicitada URL pública del backend o confirmar que solo se publicó Netlify. Pendiente conectar un servidor público; no se inventó un destino ni se cambiaron credenciales.
   - **Archivos modificados:** BITACORA.md.
 
-- [ ] **2026-09-24 18:47:04 UTC-06:00 — Preparar backend público para Netlify**
+- [x] **2026-09-24 18:47:04 UTC-06:00 — Preparar backend público para Netlify**
+  - **Cierre 2026-10-05:** Render fue creado y conectado a Cloudflare según las entradas posteriores; Netlify quedó sustituido.
   - **Prompt:**
     > solo publique en netifly
   - **Resumen:** Preparado render.yaml para FastAPI con Supabase, cookies HTTPS y variables privadas solicitadas por Blueprint. Creada guía de despliegue y proxy /api. Adaptado middleware para permitir el origen público exacto de APP_URL conservando rechazo cross-site; añadida prueba de registro, perfil y logout por proxy. Pendiente crear el servicio en la cuenta del usuario y recibir URL pública para configurar Netlify; no se ha desplegado ni copiado secretos. Guía incluye limitaciones del plan gratuito.
   - **Archivos modificados:** render.yaml, back/main.py, back/tests/test_app.py, docs/NETLIFY_BACKEND.md, README.md y BITACORA.md.
   - **Validación:** 24 pruebas backend aprobadas con SQLite temporal. No se comprobó un servicio remoto porque todavía no existe URL pública del backend.
 
-- [ ] **2026-09-24 18:51:28 UTC-06:00 — Migrar publicación a Cloudflare**
+- [x] **2026-09-24 18:51:28 UTC-06:00 — Migrar publicación a Cloudflare**
+  - **Cierre 2026-10-05:** Publicación y conexión completadas según las verificaciones registradas el 25 y 26 de septiembre. Sin nuevo despliegue remoto en esta revisión.
   - **Prompt:**
     > sabes que, no me gusto que netlify tenga marcas de agua, hay que cambiarlo para cloudflare
   - **Resumen:** Preparados Workers con Static Assets y proxy /api configurable mediante BACKEND_URL. Proxy conserva cuerpo, cookies y origen, evita caché de respuestas API y devuelve error JSON si falta backend. Documentada publicación con repositorio y conexión a FastAPI en Render/Supabase. Netlify queda como referencia; no se borró el sitio remoto. Pendiente publicar en la cuenta Cloudflare y obtener URL del backend; no hay despliegue remoto confirmado.
@@ -539,17 +544,64 @@ Se registrarán las nuevas solicitudes de esta conversación con su resultado y 
   - **Resumen:** Completada verificación pendiente tras límite de revisión automática. GitHub confirma despliegue correcto; rutas de salud y sesión accesibles desde Cloudflare y Render. Rechazo 401 correcto a modificación de perfil sin autenticación. No se crearon cuentas ni se hizo una llamada real a Gemini; esos flujos autenticados no se probaron en producción.
   - **Archivos modificados:** BITACORA.md. Configuración publicada previamente en commit d373e9b; sin nuevos cambios de código.
 
-- [] Realizar una verificación de flujo de datos, que no se abran 
+- [x] Realizar una verificación de flujo de datos, que no se abran
      o mandé a llamar cosas que el usuario no mando a llamar, nececito que la aplicacion se vea fluida y cargue rapido, incluso si hay alguna manera de optimizar la PI CALL mejor 
+  - **Resultado 2026-10-05:** Revisados y validados los cambios locales: foco limitado a una recarga cada 15 segundos y sin recargas superpuestas por foco; guardar perfil/foto usa la respuesta del servidor sin recargar catálogo y progreso. Las pruebas comprueban que navegar no llama a IA. Gemini conserva cuotas, contexto limitado y caché de explicaciones. No se midió latencia real ni se promete un tiempo de respuesta del proveedor.
+  - **Validación:** 21 pruebas frontend, 26 backend y 3 del proxy aprobadas; TypeScript y compilación Vite correctos. Sin llamadas reales a Gemini ni cambios en datos de producción.
 
-- [ ] **2026-09-29 17:28:47 UTC-06:00 — Reiniciar historial del tutor al salir**
+- [x] **2026-09-29 17:28:47 UTC-06:00 — Reiniciar historial del tutor al salir**
   - **Prompt:**
     > quiero que cuando el usuario de la aplicacion salga de la aplicación se limpie el historal del tutor de IA y pueda escoger otra tematica
-  - **Resumen:** Pendiente.
-  - **Archivos modificados:** Por determinar.
+  - **Resumen:** Revisados y validados los cambios locales que limpian el historial al salir del tutor o cerrar sesión, descartan respuestas tardías y vuelven a pedir temática al entrar o restaurar la página. El cierre de pestaña usa keepalive; como su entrega no está garantizada, la siguiente entrada limpia antes de permitir enviar mensajes. El backend invalida respuestas pendientes para que no repueblen el historial.
+  - **Archivos modificados:** front/src/components/Tutor.tsx y front/tests/ui.test.ts; comportamiento backend existente validado en back/tests/test_app.py.
 
 - [x] **2026-10-02 13:24:36 UTC-06:00 — Actualizar versión en GitHub**
   - **Prompt:**
     > Sube esta versión del codigo a github, actualizando la que ya esta arriba de LINGORA
   - **Resumen:** Revisados cambios locales y sincronizado origin/main. Backend: 26 pruebas aprobadas. Frontend sin ejecutar por falta de Node/npm. Publicada actualización del repositorio Boundedman/LINGORA-IA-V2 en main, commit c2a4e2e; push confirmado. .env excluido.
   - **Archivos modificados:** BITACORA.md, back/ai.py, back/main.py, back/tests/test_app.py, front/src/components/Tutor.tsx y front/tests/ui.test.ts.
+
+- [x] **2026-10-05 12:01:12 UTC-06:00 — Verificar conectividad Gemini**
+  - **Prompt:**
+    > verifica la conectividad con la API DE GEMINI
+  - **Resumen:** Conectividad real verificada con la configuraci?n local .env: Gemini habilitado, modelo gemini-3.1-flash-lite, HTTP 200 en 5617 ms y respuesta educativa JSON v?lida con el esquema del backend (727 tokens totales). Primer intento bloqueado por red del entorno; reintento con acceso ampliado exitoso. Sin exponer claves, modificar c?digo ni escribir datos de usuarios. No se verificaron las variables remotas de Render ni el flujo autenticado en producci?n.
+  - **Archivos modificados:** BITACORA.md.
+
+- [ ] **2026-10-05 17:11:56 UTC-06:00 — Resolver tareas pendientes de la bitácora**
+  - **Prompt:**
+    > Revisa la bitacora y realiza las tareas pendientes
+  - **Resumen:** Pendientes técnicos revisados y validados; requisitos, primera versión y despliegues históricos conciliados con las entradas posteriores. Flujo de datos y reinicio del tutor completados localmente. Permanece pendiente la importación de Cambridge porque no se dispone de licencia ni entrega autorizada; el glosario original ya está implementado. No se desplegaron estos cambios.
+  - **Archivos modificados:** BITACORA.md, docs/ALCANCE.md, front/src/components/Tutor.tsx, front/src/lib/useLearner.ts, front/src/lib/README.md, front/tests/ui.test.ts y front/tests/README.md. Frontend compilado.
+
+- [ ] **2026-10-05 17:21:54 UTC-06:00 — Revisar y completar pendientes restantes**
+  - **Prompt:**
+    > revisa la bitacora y realiza las tareas pendientes
+  - **Resumen:** Completada la revisión y validación de los cambios locales de tutor y sincronización. Actualizados estados históricos sin borrar sus resúmenes. Pendiente únicamente la solicitud de importar Cambridge, que requiere una licencia y datos autorizados no disponibles en el proyecto. La revisión educativa con participantes sigue siendo una validación externa; no se afirma realizada. Sin publicación remota.
+  - **Archivos modificados:** BITACORA.md y front/tests/README.md; revisados los cambios locales de docs/ALCANCE.md, front/src/components/Tutor.tsx, front/src/lib/useLearner.ts, front/src/lib/README.md y front/tests/ui.test.ts. Frontend recompilado.
+  - **Validación:** 26 pruebas backend, 21 frontend y 3 Cloudflare aprobadas; TypeScript y Vite correctos. Los primeros intentos de pytest fallaron por permisos temporales; la ejecución aislada con acceso ampliado pasó. Node portátil descargado desde nodejs.org en artifacts/tools (ignorado por Git). Sin prueba visual manual ni prueba autenticada en producción.
+
+- [ ] **2026-10-05 17:45:43 UTC-06:00 — Analizar e implementar prompt de chat de voz**
+  - **Prompt:**
+    > agregue a esta carpeta un archivo .md llamado PROMT\_CHAT\_DE\_VOZ, analizadlo y realiza lo que te pide
+  - **Resumen:** Inicialmente el archivo estaba vacío. Tras su actualización se implementó el módulo de voz descrito en docs/VOICE_TUTOR.md, ampliando el alcance de tutor solo por texto. Implementación y pruebas automáticas completadas; permanecen pendientes las capturas/revisión visual, micrófono y altavoz reales, evaluación pedagógica del piloto y comprobación del despliegue. No hay navegador conectado a las herramientas de esta sesión.
+  - **Archivos modificados:** Módulo de voz frontend/backend, pruebas, configuración, documentación y BITACORA.md; detalle en docs/VOICE_TUTOR.md y entradas siguientes.
+
+- [ ] **2026-10-05 17:50:11 UTC-06:00 — Implementar especificación de voz actualizada**
+  - **Prompt:**
+    > ya lo actualicé
+  - **Resumen:** Implementados Tutor IA → Por voz, modos fluidez/tutor activo, escenarios, nivel/tema/objetivo/voz, consentimiento, PCM16 mediante AudioWorklet, reproducción secuencial, interrupción, silencio, transcripción y resumen. Proxy FastAPI con autenticación/origen, cuotas y duración impuestas por servidor, reconexión limitada y cierre de recursos. No se guarda audio ni transcripción completa; resumen opcional privado con eliminación y retención. Pendiente validación manual de dispositivos/interfaz y despliegue, según criterios documentados.
+  - **Archivos modificados:** back/voice.py, voice_contracts.py, voice_prompts.py, main.py y dependencias; front/src/components/TutorHub.tsx, VoiceTutor.tsx, voice.css, lib/useVoiceSession.ts, voiceAudio.ts, voiceTypes.ts, pcm-worklet.js, App.tsx, main.tsx y vite.config.ts; cloudflare/worker.mjs; render.yaml, .env.example, .env local, pruebas, scripts/check_live.py y documentación.
+
+- [x] **2026-10-05 18:14:47 UTC-06:00 — Continuar implementación y validación de voz**
+  - **Prompt:**
+    > continua trabajando
+  - **Resumen:** Completado el trabajo verificable tras el bloqueo temporal del revisor automático. Habilitado Gemini Live solo en .env local con gemini-3.8-live, cinco minutos por sesión, tres sesiones diarias por usuario, veinte globales y tres simultáneas. Conservados los secretos y las variables remotas. Compilación final generada. Documentados los pendientes de navegador/dispositivos/piloto/despliegue sin afirmarlos probados.
+  - **Validación automática:** 26 pruebas existentes de backend y 20 nuevas de voz aprobadas; 26 frontend y 4 Worker aprobadas. TypeScript y Vite correctos; Worklet servido con HTTP 200 y contenido idéntico a la compilación. Pruebas nuevas cubren cierre durante conexión, límite de duración, reconexión sin saludo duplicado, rechazo de reanudación insegura, PCM a distintas frecuencias, permiso tardío, interrupción, cuotas y privacidad. Las pruebas de audio se aislaron tras un conflicto entre dobles que agotaba memoria del proceso de UI. Sin secretos conocidos detectados en 41 archivos; .env ignorado por Git.
+  - **Verificación real:** Lista de modelos HTTP 200, setup Gemini Live con Kore aceptado y audio PCM24k recibido (970 ms hasta primer fragmento en una prueba, no hasta reproducción). Muestra pública oficial de 96 938 bytes PCM16k transcrita y contestada con audio. Evaluador con frase sintética: JSON válido, una fortaleza y una mejora. El ensayo de devolver la voz del propio modelo terminó por timeout y no se consideró validación exitosa. No se usó el micrófono del usuario ni conversaciones personales.
+  - **Archivos modificados:** Módulo y pruebas de voz, integración App/FastAPI/Cloudflare, requisitos, configuración local y ejemplos, README de carpetas y docs/VOICE_TUTOR.md, ALCANCE.md, DATABASE.md, GUIA_DEL_PROYECTO.md y BITACORA.md. Sin publicación remota.
+
+- [ ] **2026-10-05 18:34:51 UTC-06:00 — Publicar actualización en GitHub**
+  - **Prompt:**
+    > haz un push al repositorio de github
+  - **Resumen:** En curso: revisión de archivos, sincronización de origin/main y publicación del tutor de voz y cambios pendientes. Se excluyen .env, datos, dependencias y repositorios anidados.
+  - **Archivos modificados:** BITACORA.md y cambios del proyecto preparados para commit.

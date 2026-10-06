@@ -9,7 +9,7 @@ import {ResetPassword} from './components/ResetPassword';
 import {Auth} from './components/Auth';
 import {LessonView} from './components/LessonView';
 import {DiagnosticView} from './components/DiagnosticView';
-import {Tutor} from './components/Tutor';
+import {TutorHub as Tutor} from './components/TutorHub';
 import {GlossaryView} from './components/GlossaryView';
 import {Avatar} from './components/Avatar';
 import {AccountPhoto} from './components/AccountPhoto';

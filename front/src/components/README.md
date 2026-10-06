@@ -5,6 +5,7 @@
 - `LessonView.tsx`: explicaciones, preguntas, corrección, avance y reporte de contenido. Sin sesión permite práctica temporal; con sesión guarda en la API.
 - `DiagnosticView.tsx`: preguntas, pausas, reloj, guardado periódico, actividades abiertas y resultados orientativos. Envía versiones para detectar conflictos entre dispositivos.
 - `Tutor.tsx`: interés del alumno, historial y conversación mediante el servidor.
+- `TutorHub.tsx`: alterna texto y voz. `VoiceTutor.tsx` y `voice.css`: preparación, permisos, controles, transcripción, resumen e historial de voz; el audio y el transporte están separados en `../lib/`. [Guía](../../../docs/VOICE_TUTOR.md).
 - `GlossaryView.tsx`: consulta local de 64 palabras y expresiones organizadas en 8 secciones, buscador, filtros de nivel/tema, ejemplos traducidos y propuestas de práctica libre. Disponible sin sesión; no guarda resultados ni modifica el progreso.
 - `AudioPractice.tsx`: síntesis de voz y grabación/reproducción local. El diagnóstico permite enviar audio para feedback opcional.
 

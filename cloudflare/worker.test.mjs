@@ -2,6 +2,19 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import worker from './worker.mjs';
 
+test('WebSocket upgrade is returned intact with cookies and origin',async t=>{
+  const upgraded={status:101,webSocket:{marker:true}};
+  t.mock.method(globalThis,'fetch',async(url,options)=>{
+    assert.equal(String(url),'https://backend.example/api/voice/live');
+    assert.equal(options.headers.get('upgrade'),'websocket');
+    assert.equal(options.headers.get('cookie'),'lingora_session=test');
+    assert.equal(options.headers.get('origin'),'https://app.example');
+    return upgraded;
+  });
+  const result=await worker.fetch(new Request('https://app.example/api/voice/live',{headers:{Upgrade:'websocket',Cookie:'lingora_session=test',Origin:'https://app.example'}}),{BACKEND_URL:'https://backend.example'});
+  assert.equal(result,upgraded);
+});
+
 test('static pages use assets and API without configuration returns JSON', async () => {
   const env = {ASSETS:{fetch:async()=>new Response('page')}};
   assert.equal(await (await worker.fetch(new Request('https://app.example/'),env)).text(),'page');

@@ -175,5 +175,73 @@ test('tutor starts fresh, selects another topic and clears history on page exit'
  render(React.createElement(Tutor,{learner,login:()=>{}}));
  assert.ok(screen.getByRole('button',{name:'Tecnología y videojuegos'}));
  assert.equal(calls.some(c=>c.path.endsWith('/messages')),false);
- await waitFor(()=>assert.ok(calls.filter(c=>c.body?.action==='clear-history').length>=4));
+ await waitFor(()=>assert.equal(calls.filter(c=>c.body?.action==='clear-history').length,3));
+});
+
+test('navigation does not request AI and repeated focus shares an active refresh',async()=>{
+ const paths:string[]=[];
+ let resolveRefresh:((response:Response)=>void)|undefined;
+ const response=(body:unknown)=>new Response(JSON.stringify(body));
+ const state={profile:{id:'ana',display_name:'Ana',level:'A1',level_source:'declared',interest:'',daily_minutes:15,onboarded:true},avatar_data:null,progress:[],reviews:[],diagnostic:null,lessons:curriculum};
+ globalThis.fetch=(async(url)=>{
+  const path=String(url);paths.push(path);
+  if(path.endsWith('/auth/session'))return response({session:{user:{id:'ana',email:'ana@example.com'}}});
+  if(path.endsWith('/learner')){
+   if(paths.filter(p=>p.endsWith('/learner')).length>1)return new Promise<Response>(resolve=>{resolveRefresh=resolve;});
+   return response(state);
+  }
+  return response({});
+ }) as typeof fetch;
+ render(React.createElement(App));
+ await screen.findByText('Hola, Ana. ¿Listo para avanzar?');
+ for(const name of ['Lecciones','Glosario','Mi progreso'])fireEvent.click(screen.getByRole('button',{name}));
+ fireEvent.click(screen.getByRole('button',{name:/^Tutor IA/}));
+ await waitFor(()=>assert.equal(paths.filter(p=>p.endsWith('/account')).length,1));
+ assert.equal(paths.some(p=>p.endsWith('/ai')),false);
+ for(let i=0;i<5;i++)fireEvent(window,new dom.window.Event('focus'));
+ await waitFor(()=>assert.ok(resolveRefresh));
+ assert.equal(paths.filter(p=>p.endsWith('/learner')).length,2);
+ resolveRefresh!(response(state));
+ await waitFor(()=>assert.ok(screen.getByLabelText('Tu interés principal')));
+ fireEvent(window,new dom.window.Event('focus'));
+ assert.equal(paths.filter(p=>p.endsWith('/learner')).length,2);
+});
+
+test('profile saves use the server result without downloading learner data again',async()=>{
+ const {renderHook,act}=await import('@testing-library/react');
+ const {useLearner}=await import('../src/lib/useLearner');
+ const paths:string[]=[];
+ const profile={id:'ana',display_name:'Ana',level:'A1',level_source:'declared',interest:'',daily_minutes:15,onboarded:true};
+ globalThis.fetch=(async(url)=>{
+  const path=String(url);paths.push(path);
+  const body=path.endsWith('/auth/session')?{session:{user:{id:'ana',email:'ana@example.com'}}}:path.endsWith('/profile')?{...profile,interest:'Travel'}:{profile,progress:[],reviews:[],diagnostic:null,lessons:curriculum};
+  return new Response(JSON.stringify(body));
+ }) as typeof fetch;
+ const {result}=renderHook(()=>useLearner());
+ await waitFor(()=>assert.equal(result.current.profile?.display_name,'Ana'));
+ await act(()=>result.current.updateProfile({interest:'Travel'}));
+ assert.equal(result.current.profile?.interest,'Travel');
+ assert.equal(paths.filter(p=>p.endsWith('/learner')).length,1);
+});
+
+test('leaving while Gemini responds ignores late text and restoring asks for a topic',async()=>{
+ const {Tutor}=await import('../src/components/Tutor');
+ const {act}=await import('@testing-library/react');
+ let complete:((response:Response)=>void)|undefined;
+ globalThis.fetch=(async(url)=>String(url).endsWith('/ai')?new Promise<Response>(resolve=>{complete=resolve;}):new Response('{}')) as typeof fetch;
+ const learner={session:{user:{id:'ana',email:'ana@example.com'}},profile:{interest:''},updateProfile:async()=>{}} as unknown as import('../src/lib/useLearner').Learner;
+ render(React.createElement(Tutor,{learner,login:()=>{}}));
+ fireEvent.click(screen.getByRole('button',{name:'Viajar con confianza'}));
+ await waitFor(()=>assert.equal((screen.getByRole('button',{name:'Guardar interés'}) as HTMLButtonElement).disabled,false));
+ fireEvent.click(screen.getByRole('button',{name:'Guardar interés'}));
+ await screen.findByLabelText('Mensaje para el tutor');
+ fireEvent.change(screen.getByLabelText('Mensaje para el tutor'),{target:{value:'Hello'}});
+ fireEvent.click(screen.getByRole('button',{name:'Enviar mensaje'}));
+ await waitFor(()=>assert.ok(complete));
+ fireEvent(window,new dom.window.Event('pagehide'));
+ await act(async()=>{complete!(new Response(JSON.stringify({text:'Late reply'})));});
+ assert.equal(screen.queryByText('Late reply'),null);
+ fireEvent(window,new dom.window.PageTransitionEvent('pageshow',{persisted:true}));
+ fireEvent.click(screen.getByRole('button',{name:'Tecnología y videojuegos'}));
+ await waitFor(()=>assert.equal((screen.getByRole('button',{name:'Guardar interés'}) as HTMLButtonElement).disabled,false));
 });

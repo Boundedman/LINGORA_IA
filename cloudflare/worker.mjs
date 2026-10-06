@@ -28,6 +28,9 @@ export default {
         body:['GET','HEAD'].includes(request.method) ? undefined : request.body,
         redirect:'manual'
       });
+      // Preserve the Cloudflare WebSocket upgrade and its webSocket handle.
+      // Reconstructing a plain Response loses the upgraded connection.
+      if (upstream.status === 101) return upstream;
       const result = new Response(upstream.body, upstream);
       result.headers.set('Cache-Control','no-store');
       return result;

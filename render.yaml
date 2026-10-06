@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r back/requirements.txt
-    startCommand: uvicorn back.main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn back.main:app --host 0.0.0.0 --port $PORT --ws-max-size 8192 --ws-max-queue 4
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
@@ -21,3 +21,15 @@ services:
         sync: false
       - key: AI_API_KEY
         sync: false
+      - key: LIVE_ENABLED
+        value: "false"
+      - key: LIVE_MODEL
+        value: gemini-3.8-live
+      - key: LIVE_MAX_SECONDS
+        value: "300"
+      - key: LIVE_DAILY_SESSIONS_PER_USER
+        value: "3"
+      - key: LIVE_DAILY_SESSIONS_GLOBAL
+        value: "20"
+      - key: LIVE_CONCURRENT_GLOBAL
+        value: "3"

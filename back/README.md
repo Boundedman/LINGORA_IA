@@ -9,6 +9,7 @@ Paquete Python `back`, servido con FastAPI. Entrega API e interfaz compilada des
 - `schema.sql`: SQL completo para crear manualmente las cuatro tablas en Supabase SQL Editor con el rol postgres. FastAPI ejecuta este mismo archivo al inicializar PostgreSQL. Usa el esquema `lingora`, conserva datos existentes, añade `users.display_name` a instalaciones anteriores y recupera el nombre del perfil. Configura permisos y RLS. Otros cambios de estructura requieren migraciones explícitas.
 - `learning.py`: corrección, progreso, conflictos de versión, SM-2 y diagnóstico pausable.
 - `ai.py`: Gemini, política exclusiva de aprendizaje de inglés, contexto, cuotas, caché, historial y consumo; lee la clave del entorno. Valida una decisión temática y respuesta JSON antes de mostrar texto. Las consultas ajenas reciben un rechazo fijo; las respuestas inválidas del proveedor no se publican.
+- `voice.py`: proxy WebSocket autenticado Gemini Live, cuotas, cierre, evaluación e historial opcional. `voice_contracts.py` valida entradas y evidencia; `voice_prompts.py` contiene los modos y escenarios. Véase [guía de voz](../docs/VOICE_TUTOR.md).
 - `curriculum.json`: catálogo generado desde `front/src/data/curriculum.ts`; permite arrancar Python sin Node una vez compilado.
 - `requirements.txt`: dependencias con intervalos de versión.
 - `requirements.lock.txt`: versiones exactas comprobadas en el entorno Windows/Python original.

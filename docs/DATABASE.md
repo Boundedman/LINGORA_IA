@@ -1,5 +1,7 @@
 # Datos del prototipo
 
+El módulo de voz añade los tipos `voice_sessions` (metadatos de cuota, dos días) y `voice_summaries` (resúmenes optativos, 30 días) a `records`, sin crear tablas ni copiar audio/transcripciones completas. Tienen el mismo aislamiento por usuario y borrado en cascada. El historial permite eliminar cada resumen; la exportación incluye ambos tipos. La limpieza se ejecuta al arrancar, cada hora y antes de consultar/reservar. [Política y límites](VOICE_TUTOR.md).
+
 Con DATABASE_URL, PostgreSQL de Supabase guarda cuentas y actividad en el esquema privado lingora. Sin DATABASE_URL, se conserva SQLite en data/lingora.sqlite3. No se hace fallback silencioso a SQLite si PostgreSQL falla. No se usan Supabase Auth ni los scripts legacy.
 
 ## Estructura

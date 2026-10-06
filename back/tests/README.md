@@ -1,5 +1,7 @@
 # Pruebas del backend
 
+`test_voice.py` usa Gemini Live simulado y SQLite temporal para comprobar origen/autenticación, opciones cerradas, consentimiento, cuotas y concurrencia, todas las partes de audio, duración del servidor, cierre durante conexión, historial privado y retención. También valida citas contra turnos existentes, rechaza pronunciación desde texto y comprueba el fallback del evaluador. Las pruebas reales opcionales se describen en [VOICE_TUTOR.md](../../docs/VOICE_TUTOR.md).
+
 `test_app.py` ejecuta FastAPI con `TestClient` y SQLite temporal. Comprueba sesiones, aislamiento, eliminación, ejercicios, conflictos, concurrencia, repasos, diagnóstico, recuperación, invitaciones, validación, origen de peticiones y cuotas/historial de IA.
 
 También comprueba que las cuatro operaciones IA sustituyan respuestas fuera de alcance por el rechazo fijo, que JSON inválido no se exponga y que no se reutilice caché de la política anterior. Los dobles del proveedor verifican el comportamiento del servidor; no demuestran por sí solos la clasificación semántica del modelo real.

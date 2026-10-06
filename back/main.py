@@ -1,4 +1,5 @@
 """Lingora: FastAPI API and the existing interface in one deployable application."""
+import asyncio
 import json
 import os
 import time
@@ -21,7 +22,15 @@ load_dotenv(ROOT / ".env")
 async def lifespan(app):
     initialize()
     app.state.lessons = json.loads((ROOT / "back/curriculum.json").read_text(encoding="utf-8"))
-    yield
+    from .voice import retention_loop, purge_expired
+    from starlette.concurrency import run_in_threadpool
+    await run_in_threadpool(purge_expired)
+    retention = asyncio.create_task(retention_loop())
+    try:
+        yield
+    finally:
+        retention.cancel()
+        await asyncio.gather(retention, return_exceptions=True)
 
 app = FastAPI(title="Lingora · Prototipo monolítico", lifespan=lifespan)
 
@@ -244,7 +253,9 @@ def account(body: Account, response: Response, user=Depends(auth.current_user)):
     uid = user['id']
     with database() as conn:
         if body.action == 'export':
-            return {kind: rows(conn, kind, uid) for kind in ['profiles','avatars','lesson_progress','reviews','diagnostics','user_errors','messages','exercise_attempts','feedback','ai_requests']}
+            from .voice import purge
+            purge(conn)
+            return {kind: rows(conn, kind, uid) for kind in ['profiles','avatars','lesson_progress','reviews','diagnostics','user_errors','messages','exercise_attempts','feedback','ai_requests','voice_sessions','voice_summaries']}
         if body.action == 'clear-history':
             clear_tutor_history(conn, uid)
         elif body.confirmation == 'ELIMINAR':
@@ -255,6 +266,9 @@ def account(body: Account, response: Response, user=Depends(auth.current_user)):
     return {"deleted": True}
 
 from .ai import AIRequest, generate
+from .voice import router as voice_router
+
+app.include_router(voice_router)
 
 @app.post('/api/ai')
 def ai(body: AIRequest, user=Depends(auth.current_user)):

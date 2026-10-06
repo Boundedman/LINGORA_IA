@@ -2,6 +2,8 @@
 
 FastAPI sirve la interfaz React y la API desde un proceso; PostgreSQL de Supabase guarda cuentas y actividades cuando se configura DATABASE_URL; sin ella se usa SQLite. Se conservan el diseño y las 28 lecciones A1–B2.
 
+El tutor incluye modalidades **Por texto** y **Por voz** (Gemini Live, activación configurable). Consulta [configuración, privacidad y pruebas de voz](docs/VOICE_TUTOR.md). La clave permanece en FastAPI; el micrófono se solicita únicamente al iniciar una práctica.
+
 ## Organización
 
 - [front/](front/README.md): interfaz, estilos, catálogo y pruebas React.

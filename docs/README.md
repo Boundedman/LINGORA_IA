@@ -5,6 +5,7 @@
 - [ARCHITECTURE.md](ARCHITECTURE.md): responsabilidades, consistencia y límites del monolito.
 - [DATABASE.md](DATABASE.md): SQLite, aislamiento, exportación, eliminación y respaldos.
 - [ALCANCE.md](ALCANCE.md): alcance educativo acordado.
+- [VOICE_TUTOR.md](VOICE_TUTOR.md): tutor Gemini Live, configuración, archivos, privacidad, consumo, despliegue y criterios de aceptación.
 - [PROMPT_ORIGINAL.md](PROMPT_ORIGINAL.md): propuesta original; no implica que cada idea esté implementada.
 - [legacy/](legacy/README.md): guías históricas anteriores a FastAPI.
 - [skills/](skills/README.md): skills reutilizables de desarrollo; incluye Cambridge como apoyo externo, sin conexión automática al tutor.

@@ -4,6 +4,7 @@
 
 - `export-curriculum.ts`: importa `front/src/data/curriculum.ts` y escribe `back/curriculum.json`; forma parte de `npm run build`.
 - `python.mjs`: elige `.venv/Scripts/python.exe` en Windows o `.venv/bin/python` en Linux/macOS, transmite argumentos, salida y señales. Lo usan los comandos de servidor y pruebas Python.
+- `check_live.py`: consulta modelos Gemini con la clave privada; `--handshake` genera una frase y `--sample` verifica PCM bidireccional con la muestra pública oficial. Estas opciones consumen cuota; no usan el micrófono ni imprimen contenido o credenciales. [Guía](../docs/VOICE_TUTOR.md).
 
 Ejecuta los comandos desde la raíz, donde están `.venv` y `package.json`. Estas herramientas conectan frontend y backend; no contienen lógica educativa ni credenciales. Los scripts históricos están en `legacy/scripts/`.
 

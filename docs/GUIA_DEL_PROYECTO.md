@@ -14,7 +14,7 @@ La versión anterior con Supabase y Netlify queda conservada como referencia en 
 - Ejercicios con persistencia, corrección de respuestas cerradas y continuidad entre dispositivos conectados al mismo servidor.
 - Repasos SM-2 y progreso por habilidad.
 - Diagnóstico pausable de hasta quince minutos activos, con conflictos entre dispositivos controlados.
-- Tutor por texto y feedback opcional de escritura/audio al configurar Gemini.
+- Tutor por texto, feedback opcional de escritura/audio y módulo Gemini Live en Tutor IA → Por voz; configuración, privacidad y verificaciones pendientes en [VOICE_TUTOR.md](VOICE_TUTOR.md).
 - Listening con voz del navegador, grabación y reproducción local.
 - Enlaces «Consultar en Cambridge» junto al vocabulario de cada unidad, para consultar significados y pronunciación en un recurso externo independiente.
 - Reportes de contenido, exportación de datos, borrado de conversaciones y eliminación de cuenta.
