@@ -600,8 +600,9 @@ Se registrarán las nuevas solicitudes de esta conversación con su resultado y 
   - **Verificación real:** Lista de modelos HTTP 200, setup Gemini Live con Kore aceptado y audio PCM24k recibido (970 ms hasta primer fragmento en una prueba, no hasta reproducción). Muestra pública oficial de 96 938 bytes PCM16k transcrita y contestada con audio. Evaluador con frase sintética: JSON válido, una fortaleza y una mejora. El ensayo de devolver la voz del propio modelo terminó por timeout y no se consideró validación exitosa. No se usó el micrófono del usuario ni conversaciones personales.
   - **Archivos modificados:** Módulo y pruebas de voz, integración App/FastAPI/Cloudflare, requisitos, configuración local y ejemplos, README de carpetas y docs/VOICE_TUTOR.md, ALCANCE.md, DATABASE.md, GUIA_DEL_PROYECTO.md y BITACORA.md. Sin publicación remota.
 
-- [ ] **2026-10-05 18:34:51 UTC-06:00 — Publicar actualización en GitHub**
+- [x] **2026-10-05 18:34:51 UTC-06:00 — Publicar actualización en GitHub**
   - **Prompt:**
     > haz un push al repositorio de github
-  - **Resumen:** En curso: revisión de archivos, sincronización de origin/main y publicación del tutor de voz y cambios pendientes. Se excluyen .env, datos, dependencias y repositorios anidados.
-  - **Archivos modificados:** BITACORA.md y cambios del proyecto preparados para commit.
+  - **Resumen:** Publicados en main los 41 archivos de la actualización, commit 6255a47 (tutor de voz, optimizaciones y documentación). Push confirmado. GitHub informó traslado a https://github.com/Lingora-IA/LINGORA-IA-V2.git; remoto local actualizado a esa ubicación. .env, datos, dependencias, compilados y repositorios anidados excluidos.
+  - **Validación:** Rama previamente sincronizada con origin/main; diff sin errores y revisión de los 41 archivos preparados sin coincidencias de secretos conocidos. Se conservan las 76 pruebas y compilación verificadas en la implementación anterior; no se repitieron por tratarse de publicación sin cambios de código. El push no confirma el resultado de despliegues automáticos ni activa LIVE_ENABLED en Render.
+  - **Archivos modificados:** BITACORA.md y archivos del commit 6255a47; configuración del remoto Git.
