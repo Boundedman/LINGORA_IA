@@ -657,8 +657,8 @@ Se registrarán las nuevas solicitudes de esta conversación con su resultado y 
   - **Resumen:** Ambos repositorios accesibles y públicos. Preparada sustitución de los archivos de main de Boundedman/LINGORA_IA por el proyecto actual mediante unión de historiales con estrategia ours, conservando el commit anterior 5c9ad5d. Creada skill lingora-push-dual, instalada en ~/.codex/skills y versionada en docs/skills; AGENTS.md activa su uso al pedir push. Remoto personal agregado. Publicados y verificados ambos main con el mismo SHA bb43f87a30a18d0ffbf56e53e2cd8a55372e7a94. Archivos antiguos del repositorio personal reemplazados, manteniendo su historial; sin force push ni borrado del repositorio. Skill validada manualmente (frontmatter, tamaño, ausencia de placeholders y copia instalada idéntica); validador oficial no disponible por falta de PyYAML. Sin cambios de código ni nuevas pruebas de aplicación. No se confirma el despliegue automático de Cloudflare.
   - **Archivos modificados:** BITACORA.md, AGENTS.md y docs/skills/lingora-push-dual/SKILL.md; skill instalada en C:/Users/raged/.codex/skills/lingora-push-dual/SKILL.md y remoto personal configurado.
 
-- [ ] **2026-10-08 22:17:05 UTC-06:00 — Publicar cambio de nombre en Wrangler**
+- [x] **2026-10-08 22:17:05 UTC-06:00 — Publicar cambio de nombre en Wrangler**
   - **Prompt:**
     > vuelve a hacer push actualize el name en el wrangler.json
-  - **Resumen:** Cambio revisado: name pasa de lingora-ia-v3 a lingora_ia en wrangler.jsonc; JSON válido. Pendiente publicación y verificación en ambos repositorios. Sin cambios de código ni pruebas de aplicación adicionales.
+  - **Resumen:** Cambio revisado: name pasa de lingora-ia-v3 a lingora_ia en wrangler.jsonc; JSON válido. Publicado cambio en commit d7dbebd y verificado SHA idéntico en main de Lingora-IA/LINGORA-IA-V2 y Boundedman/LINGORA_IA. Sin cambios de código ni pruebas de aplicación adicionales; JSON válido y diff sin errores. Despliegue Cloudflare no verificado.
   - **Archivos modificados:** wrangler.jsonc y BITACORA.md.
