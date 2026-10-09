@@ -765,8 +765,8 @@ Se registrarán las nuevas solicitudes de esta conversación con su resultado y 
   - **Archivos modificados:** back/voice.py y tests/test_voice.py; front/src/lib/silenceGate.ts, voiceAudio.ts, useVoiceSession.ts, voiceTypes.ts y components/VoiceTutor.tsx; front/tests/silence-gate.test.ts y voice-audio.test.ts; .env.example, render.yaml, docs/VOICE_RESOURCE_OPTIMIZATION.md, docs/VOICE_TUTOR.md y BITACORA.md.
 
 
-- [ ] **2026-10-09 09:59:19 UTC-06:00 — Push dual de optimización de recursos de voz**
+- [x] **2026-10-09 09:59:19 UTC-06:00 — Push dual de optimización de recursos de voz**
   - **Prompt:**
     > haz el push
-  - **Resumen:** Pendiente de publicar y verificar los cambios de optimización de voz en ambos repositorios. Se conserva la validación de pruebas, TypeScript y Vite del trabajo anterior. Prueba acústica y ahorro facturado pendientes. Se excluyen .env, compilados, dependencias y el repositorio anidado LINGORA-IA.
+  - **Resumen:** Publicado y verificado el commit 36f2a50ef1c136b0238d59582f9d8eea7ceb861b en main de Lingora-IA/LINGORA-IA-V2 y Boundedman/LINGORA_IA; ambos SHA coinciden. Se publica también este registro en ambos destinos. Se conserva la validación de pruebas, TypeScript y Vite del trabajo anterior. Prueba acústica, ahorro facturado y verificación de despliegues pendientes. Se excluyeron .env, compilados, dependencias y el repositorio anidado LINGORA-IA.
   - **Archivos modificados:** Código, pruebas, configuración de ejemplo y documentación de optimización de voz; BITACORA.md.
