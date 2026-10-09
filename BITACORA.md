@@ -770,3 +770,10 @@ Se registrarán las nuevas solicitudes de esta conversación con su resultado y 
     > haz el push
   - **Resumen:** Publicado y verificado el commit 36f2a50ef1c136b0238d59582f9d8eea7ceb861b en main de Lingora-IA/LINGORA-IA-V2 y Boundedman/LINGORA_IA; ambos SHA coinciden. Se publica también este registro en ambos destinos. Se conserva la validación de pruebas, TypeScript y Vite del trabajo anterior. Prueba acústica, ahorro facturado y verificación de despliegues pendientes. Se excluyeron .env, compilados, dependencias y el repositorio anidado LINGORA-IA.
   - **Archivos modificados:** Código, pruebas, configuración de ejemplo y documentación de optimización de voz; BITACORA.md.
+
+
+- [ ] **2026-10-09 10:07:58 UTC-06:00 — Reiniciar cuotas de voz y publicar**
+  - **Prompt:**
+    > reinicia las cuotas para el chat por voz a cero, para poder probarla, cuando acabes haz el push
+  - **Resumen:** Reiniciadas las cuotas internas en PostgreSQL configurado: eliminados tres registros voice_sessions, cero sesiones activas; consulta posterior confirmó cero registros. Herramienta transaccional con consulta sin cambios por defecto y --apply explícito, rechazo si hay sesiones activas, preservación de cuentas/progreso/resúmenes y verificación antes de confirmar. Dos pruebas aprobadas en base aislada; git diff --check correcto. No modifica cuotas de Google ni límites configurados. Pendiente publicar herramienta y bitácora en ambos repositorios.
+  - **Archivos modificados:** scripts/reset_voice_quotas.py, scripts/README.md, back/tests/test_voice_quota_reset.py y BITACORA.md.
