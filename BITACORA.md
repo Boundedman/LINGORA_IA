@@ -772,8 +772,8 @@ Se registrarán las nuevas solicitudes de esta conversación con su resultado y 
   - **Archivos modificados:** Código, pruebas, configuración de ejemplo y documentación de optimización de voz; BITACORA.md.
 
 
-- [ ] **2026-10-09 10:07:58 UTC-06:00 — Reiniciar cuotas de voz y publicar**
+- [x] **2026-10-09 10:07:58 UTC-06:00 — Reiniciar cuotas de voz y publicar**
   - **Prompt:**
     > reinicia las cuotas para el chat por voz a cero, para poder probarla, cuando acabes haz el push
-  - **Resumen:** Reiniciadas las cuotas internas en PostgreSQL configurado: eliminados tres registros voice_sessions, cero sesiones activas; consulta posterior confirmó cero registros. Herramienta transaccional con consulta sin cambios por defecto y --apply explícito, rechazo si hay sesiones activas, preservación de cuentas/progreso/resúmenes y verificación antes de confirmar. Dos pruebas aprobadas en base aislada; git diff --check correcto. No modifica cuotas de Google ni límites configurados. Pendiente publicar herramienta y bitácora en ambos repositorios.
+  - **Resumen:** Reiniciadas las cuotas internas en PostgreSQL configurado: eliminados tres registros voice_sessions, cero sesiones activas; consulta posterior confirmó cero registros. Herramienta transaccional con consulta sin cambios por defecto y --apply explícito, rechazo si hay sesiones activas, preservación de cuentas/progreso/resúmenes y verificación antes de confirmar. Dos pruebas aprobadas en base aislada; git diff --check correcto. No modifica cuotas de Google ni límites configurados. Publicado y verificado 10b391c7bdd952914a3e14c1e3aa6a4dcd219a95 en main de Lingora-IA/LINGORA-IA-V2 y Boundedman/LINGORA_IA. Se publica también este registro de resultado en ambos destinos. Despliegues no verificados; el reinicio de base ya se aplicó y no depende del despliegue.
   - **Archivos modificados:** scripts/reset_voice_quotas.py, scripts/README.md, back/tests/test_voice_quota_reset.py y BITACORA.md.
