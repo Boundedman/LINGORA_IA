@@ -114,7 +114,8 @@ def test_voice_concurrency_and_daily_quota(enabled, monkeypatch):
         first.send_json({'type':'finish'});until(first, 'summary')
     monkeypatch.setenv('LIVE_DAILY_SESSIONS_PER_USER','1')
     with enabled.websocket_connect('/api/voice/live', headers=ORIGIN) as ws:
-        ws.send_json(OPTIONS);assert 'cuota' in ws.receive_json()['message']
+        ws.send_json(OPTIONS);error=ws.receive_json();assert error['code']=='user_daily_limit'
+        assert 'cuota' in error['message']
     assert len(Provider.instances) == 1
 
 
@@ -272,6 +273,99 @@ def test_provider_disconnect_midturn_closes_without_unsafe_resume(enabled, monke
     signup(enabled)
     with enabled.websocket_connect('/api/voice/live',headers=ORIGIN) as ws:
         ws.send_json(OPTIONS)
-        assert until(ws,'error')['message'].startswith('Se interrumpió')
+        error = until(ws,'error')
+        assert error['code'] == 'provider_connection'
+        assert 'micrófono está apagado' in error['message']
     assert len(Provider.instances)==1
     assert Provider.instances[0].closed
+
+
+def test_compression_is_bounded_and_only_audio_activity_is_retained(monkeypatch):
+    options = VoiceOptions(**OPTIONS)
+    config = voice.setup(options, 'gemini-3.8-live')['setup']
+    assert config['contextWindowCompression'] == {'triggerTokens': '12000', 'slidingWindow': {'targetTokens': '6000'}}
+    assert config['realtimeInputConfig']['turnCoverage'] == 'TURN_INCLUDES_ONLY_ACTIVITY'
+    monkeypatch.setenv('LIVE_CONTEXT_TRIGGER_TOKENS', '-1')
+    monkeypatch.setenv('LIVE_CONTEXT_TARGET_TOKENS', '999999')
+    assert voice.context_limits() == {'triggerTokens': '4096', 'slidingWindow': {'targetTokens': '2048'}}
+    monkeypatch.setenv('LIVE_FILTER_SILENCE', 'false')
+    assert voice.config()['filter_silence'] is False
+
+
+def test_distinct_global_and_concurrent_limits_and_failed_setup_does_not_use_daily_quota(enabled, monkeypatch):
+    uid = signup(enabled)
+    monkeypatch.setenv('LIVE_CONCURRENT_GLOBAL', '0')
+    with pytest.raises(voice.VoiceFailure) as error: voice.reserve(uid, None, False)
+    assert error.value.code == 'concurrent_limit'
+    monkeypatch.setenv('LIVE_CONCURRENT_GLOBAL', '3')
+    monkeypatch.setenv('LIVE_DAILY_SESSIONS_GLOBAL', '0')
+    with pytest.raises(voice.VoiceFailure) as error: voice.reserve(uid, None, False)
+    assert error.value.code == 'global_daily_limit'
+    monkeypatch.setenv('LIVE_DAILY_SESSIONS_GLOBAL', '20')
+    monkeypatch.setenv('LIVE_DAILY_SESSIONS_PER_USER', '1')
+    sid = voice.reserve(uid, None, False)
+    voice.complete(uid, sid, voice.fallback_summary(), 0, 0)
+    second = voice.reserve(uid, None, False)
+    voice.mark_started(uid, second)
+    voice.complete(uid, second, voice.fallback_summary(), 0, 0)
+    with pytest.raises(voice.VoiceFailure) as error: voice.reserve(uid, None, False)
+    assert error.value.code == 'user_daily_limit'
+
+
+def test_silence_end_keeps_session_open_and_metrics_exclude_content(enabled, monkeypatch):
+    original = Provider.send
+    async def report(self, raw):
+        await original(self, raw)
+        if json.loads(raw).get('realtimeInput', {}).get('audioStreamEnd'):
+            await self.queue.put(json.dumps({'usageMetadata': {'totalTokenCount': 150, 'promptTokenCount': 100, 'responseTokenCount': 50}, 'serverContent': {'turnComplete': True}}))
+    monkeypatch.setattr(Provider, 'send', report)
+    uid = signup(enabled)
+    with enabled.websocket_connect('/api/voice/live', headers=ORIGIN) as ws:
+        ws.send_json(OPTIONS);until(ws, 'turn_complete')
+        for i in range(2):
+            ws.send_bytes(b'\x01\x00'*320)
+            ws.send_json({'type': 'audio_end'})
+            until(ws, 'turn_complete')
+        ws.send_json({'type': 'stop'})
+        with pytest.raises(WebSocketDisconnect): ws.receive_json()
+    with database() as conn:
+        record = rows(conn, 'voice_sessions', uid)[0]
+    assert record['metrics']['reported_token_sum'] == 300
+    assert record['metrics']['usage_reports'] == 2
+    assert record['metrics']['peak_prompt_tokens'] == 100
+    assert record['metrics']['output_bytes'] == 480
+    assert 'Hello' not in json.dumps(record)
+    assert Provider.instances[0].closed
+
+
+def test_provider_quota_is_not_a_voluntary_finish_or_retried(enabled, monkeypatch):
+    original = Provider.send
+    async def reject(self, raw):
+        await original(self, raw)
+        if 'clientContent' in json.loads(raw):
+            await self.queue.put(json.dumps({'error': {'code': 429, 'status': 'RESOURCE_EXHAUSTED', 'message': 'private provider information'}}))
+    monkeypatch.setattr(Provider, 'send', reject)
+    uid = signup(enabled)
+    with enabled.websocket_connect('/api/voice/live', headers=ORIGIN) as ws:
+        ws.send_json(OPTIONS);error=until(ws, 'error')
+        assert error['code'] == 'provider_quota'
+        assert 'private' not in json.dumps(error)
+    assert len(Provider.instances) == 1
+    assert Provider.instances[0].closed
+    with database() as conn:
+        assert rows(conn, 'voice_sessions', uid)[0]['metrics']['error_code'] == 'provider_quota'
+
+
+def test_provider_quota_during_setup_releases_daily_reservation(enabled, monkeypatch):
+    async def reject(self):
+        return json.dumps({'error': {'code': 429, 'status': 'RESOURCE_EXHAUSTED'}})
+    monkeypatch.setattr(Provider, 'recv', reject)
+    monkeypatch.setenv('LIVE_DAILY_SESSIONS_PER_USER', '1')
+    uid = signup(enabled)
+    for _ in range(2):
+        with enabled.websocket_connect('/api/voice/live', headers=ORIGIN) as ws:
+            ws.send_json(OPTIONS)
+            assert until(ws, 'error')['code'] == 'provider_quota'
+    assert len(Provider.instances) == 2
+    with database() as conn:
+        assert all(r['status'] == 'finished' and not r.get('started_at') for r in rows(conn, 'voice_sessions', uid))

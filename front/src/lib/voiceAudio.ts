@@ -1,4 +1,7 @@
+import {SilenceGate} from './silenceGate';
+
 export class VoiceAudio {
+  private gate?:SilenceGate;
   private context:AudioContext;
   private stream?:MediaStream;
   private worklet?:AudioWorkletNode;
@@ -13,7 +16,8 @@ export class VoiceAudio {
     this.output=this.context.createAnalyser();this.output.fftSize=256;
     this.output.connect(this.context.destination);
   }
-  async open(send:(data:ArrayBuffer)=>void,lost:()=>void){
+  async open(send:(data:ArrayBuffer)=>void,lost:()=>void,end:()=>void=()=>{},filterSilence=true){
+    this.gate=filterSilence?new SilenceGate(send,end):undefined;
     // Called from an explicit click, before any network request.
     await this.context.resume();
     const stream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});
@@ -26,13 +30,14 @@ export class VoiceAudio {
       const source=this.context.createMediaStreamSource(stream);
       this.input=this.context.createAnalyser();this.input.fftSize=256;
       this.worklet=new AudioWorkletNode(this.context,'lingora-pcm');
-      this.worklet.port.onmessage=event=>{if(!this.closed&&!this.muted)send(event.data as ArrayBuffer);};
+      this.worklet.port.onmessage=event=>{if(!this.closed&&!this.muted){if(this.gate)this.gate.push(event.data as ArrayBuffer);else send(event.data as ArrayBuffer);}};
       const silent=this.context.createGain();silent.gain.value=0;
       source.connect(this.input);source.connect(this.worklet);this.worklet.connect(silent);silent.connect(this.context.destination);
       return true;
     }catch(error){this.close();throw error;}
   }
   mute(value:boolean){
+    this.gate?.reset();
     this.muted=value;this.stream?.getAudioTracks().forEach(track=>{track.enabled=!value;});
     this.worklet?.port.postMessage({muted:value});
   }
@@ -59,6 +64,7 @@ export class VoiceAudio {
   }
   close(){
     if(this.closed)return;this.closed=true;
+    this.gate?.reset();this.gate=undefined;
     this.stream?.getTracks().forEach(track=>{track.onended=null;track.stop();});
     if(this.worklet){this.worklet.port.onmessage=null;this.worklet.disconnect();this.worklet.port.close();}
     this.stopSpeaker();void this.context.close().catch(()=>{});

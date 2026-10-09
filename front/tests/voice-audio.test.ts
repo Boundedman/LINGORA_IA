@@ -4,6 +4,28 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {VoiceAudio} from '../src/lib/voiceAudio';
 
+test('microphone integrates silence filtering, continuous fallback and immediate cleanup',async()=>{
+ for(const filter of [true,false]){
+  let port:any,stops=0;const sent:ArrayBuffer[]=[];let ends=0;
+  class Context{state='running';destination={};audioWorklet={addModule:async()=>{}};resume(){return Promise.resolve();}close(){return Promise.resolve();}createAnalyser(){return {connect(){}};}createMediaStreamSource(){return {connect(){}};}createGain(){return {gain:{value:0},connect(){}};}}
+  class Worklet{port={onmessage:null as any,postMessage(){},close(){}};constructor(){port=this.port;}connect(){}disconnect(){}}
+  Object.defineProperty(globalThis,'AudioContext',{configurable:true,value:Context});
+  Object.defineProperty(globalThis,'AudioWorkletNode',{configurable:true,value:Worklet});
+  const tracks=[{stop(){stops++;},enabled:true,onended:null}];
+  Object.defineProperty(globalThis,'navigator',{configurable:true,value:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>tracks,getAudioTracks:()=>tracks})}}});
+  const engine=new VoiceAudio();assert.ok(await engine.open(data=>sent.push(data),()=>{},()=>ends++,filter));
+  for(let i=0;i<100;i++)port.onmessage({data:new ArrayBuffer(640)});
+  assert.equal(sent.length,filter?0:100);
+  const speech=new ArrayBuffer(640);new Int16Array(speech).fill(100);
+  port.onmessage({data:speech});
+  for(let i=0;i<100;i++)port.onmessage({data:new ArrayBuffer(640)});
+  assert.equal(ends,filter?1:0);
+  const count=sent.length;engine.mute(true);port.onmessage({data:speech});assert.equal(sent.length,count);
+  engine.mute(false);port.onmessage({data:speech});assert.equal(sent.length,count+1);
+  const late=port.onmessage;engine.close();late({data:speech});assert.equal(sent.length,count+1);assert.equal(stops,1);
+ }
+});
+
 test('AudioWorklet converts actual rates to bounded little-endian PCM and stops sending when muted',()=>{
  for(const rate of [16000,24000,44100,48000]){
   const chunks:ArrayBuffer[]=[];let Processor:any;

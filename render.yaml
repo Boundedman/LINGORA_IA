@@ -31,3 +31,9 @@ services:
         value: "20"
       - key: LIVE_CONCURRENT_GLOBAL
         value: "3"
+      - key: LIVE_CONTEXT_TRIGGER_TOKENS
+        value: "12000"
+      - key: LIVE_CONTEXT_TARGET_TOKENS
+        value: "6000"
+      - key: LIVE_FILTER_SILENCE
+        value: "true"

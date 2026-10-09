@@ -35,7 +35,7 @@ export function VoiceTutor({learner,login}:{learner:Learner;login:()=>void}){
    <div className="voice-action-zone">
     {busy&&<p className="voice-control-status" aria-hidden="true">{labels[phase]}</p>}
     <div className="voice-primary-slot">
-     <button className={busy?'voice-primary voice-end':'voice-primary'} disabled={!busy&&(!learner.session||!config?.enabled||configBusy)} onClick={()=>busy?voice.finish():void voice.start(options)}>
+     <button className={busy?'voice-primary voice-end':'voice-primary'} disabled={!busy&&(!learner.session||!config?.enabled||configBusy)} onClick={()=>busy?voice.finish():void voice.start(options,config?.filter_silence??true)}>
       {busy?<Square size={18}/>:voice.state==='error'?<RotateCcw size={20}/>:<Mic size={20}/>}{busy?'Finalizar conversación':voice.state==='error'?'Reintentar':'Comenzar'}
      </button>
     </div>

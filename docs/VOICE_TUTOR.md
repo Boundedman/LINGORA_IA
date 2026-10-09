@@ -130,3 +130,8 @@ No se declara listo para producción mientras falten estas verificaciones.
 Pruebas con dispositivos y proveedor simulados: inicio con una acción, clics repetidos sin duplicados, permiso rechazado, permiso tardío tras cancelar, varios turnos y pausas, cierre inmediato, descarte de audio tardío, nuevo inicio, errores distintos del cierre voluntario y liberación de pistas/cola de reproducción. Backend: continuidad más allá del antiguo límite, cierre del proveedor sin evaluar, renovación de reservas y transcripción acotada. No hay navegador conectado en esta sesión; la revisión visual en móvil/escritorio y una conversación con micrófono real quedan pendientes. No se publicaron ni desplegaron estos cambios.
 
 Referencia de gestión de sesiones: https://ai.google.dev/gemini-api/docs/live-api/session-management
+
+
+## Optimización y diagnóstico de recursos
+
+Consulta [VOICE_RESOURCE_OPTIMIZATION.md](VOICE_RESOURCE_OPTIMIZATION.md) para límites de contexto, filtrado de silencio, métricas, códigos de error y comprobaciones pendientes en micrófonos reales.

@@ -36,7 +36,7 @@ export function useVoiceSession(){
     if(socket.current?.readyState===WebSocket.OPEN)socket.current.send(JSON.stringify({type:'mute',muted:value}));
   }
   function stopSpeaker(){ignored.current=lastTurn.current;audio.current?.stopSpeaker();setLevels(l=>({...l,output:0,speaking:false}));}
-  async function start(options:VoiceOptions){
+  async function start(options:VoiceOptions,filterSilence=true){
     if(!['ready','finished','error'].includes(current.current))return;
     if(!options.consent)return;
     disconnect();cleanupAudio();const token=++generation.current;
@@ -51,7 +51,10 @@ export function useVoiceSession(){
         if(token!==generation.current||current.current!=='active'||ws?.readyState!==WebSocket.OPEN)return;
         if(ws.bufferedAmount>64000){localEnd('La red no alcanza a enviar el audio. Vuelve a intentarlo.');return;}
         ws.send(data);
-      },()=>localEnd('El micrófono se desconectó. Revisa el dispositivo e inicia otra práctica.'));
+      },()=>localEnd('El micrófono se desconectó. Revisa el dispositivo e inicia otra práctica.'),()=>{
+        if(token===generation.current&&current.current==='active'&&socket.current?.readyState===WebSocket.OPEN)
+          socket.current.send(JSON.stringify({type:'audio_end'}));
+      },filterSilence);
       if(token!==generation.current||!opened){engine.close();return;}
       engine.mute(true); // Capture permission is granted; transmit only after setup.
       change('connecting');
