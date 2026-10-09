@@ -662,3 +662,91 @@ Se registrarán las nuevas solicitudes de esta conversación con su resultado y 
     > vuelve a hacer push actualize el name en el wrangler.json
   - **Resumen:** Cambio revisado: name pasa de lingora-ia-v3 a lingora_ia en wrangler.jsonc; JSON válido. Publicado cambio en commit d7dbebd y verificado SHA idéntico en main de Lingora-IA/LINGORA-IA-V2 y Boundedman/LINGORA_IA. Sin cambios de código ni pruebas de aplicación adicionales; JSON válido y diff sin errores. Despliegue Cloudflare no verificado.
   - **Archivos modificados:** wrangler.jsonc y BITACORA.md.
+
+- [x] **2026-10-08 22:22:26 UTC-06:00 — Diagnosticar disponibilidad de voz en producción**
+  - **Prompt:**
+    > me aparecio este problema, busca soluciones
+  - **Contexto:** Captura del tutor por voz: No pudimos consultar la disponibilidad de voz. Vuelve a abrir esta sección.
+  - **Resumen:** Diagnóstico confirmado mediante consultas públicas: Render /api/health responde 200 con PostgreSQL; /api/voice/config responde 404 y /openapi.json no contiene ninguna ruta /api/voice. El backend publicado no incluye las rutas de voz presentes en el código local; no se conoce la causa del desfase sin panel/logs de Render. Solución indicada: revisar repositorio y rama main del servicio lingora-api y ejecutar Manual Deploy > Deploy latest commit; comprobar la ruta hasta recibir JSON 200. Después revisar LIVE_ENABLED=true, AI_ENABLED=true, AI_PROVIDER=gemini, AI_API_KEY y LIVE_MODEL en Environment. LIVE_ENABLED=false devuelve JSON enabled:false en el código nuevo y no explica el 404 actual. Consultadas fuentes oficiales https://render.com/docs/deploys y https://render.com/docs/configure-environment-variables . Investigación completada; reparación y validación remota pendientes del acceso al panel de Render. Sin cambios de código, push, llamadas Gemini ni modificación de datos.
+  - **Archivos modificados:** BITACORA.md.
+
+- [x] **2026-10-08 22:37:04 UTC-06:00 — Revisar captura del despliegue fallido de Render**
+  - **Prompt:** [Solo imagen, sin texto: servicio lingora-api, runtime Node, Blueprint managed, Boundedman/LINGORA_IA main, intento 81330e5 Failed en 39,1 segundos.]
+  - **Resumen:** Captura confirma que Render recibe el commit actualizado, pero falla el despliegue. Discrepancia entre runtime remoto Node y render.yaml local con Python, pip y uvicorn. Consultada documentación oficial vigente: permite cambiar runtime del servicio existente por Settings > Build > Source > Edit o sincronizando Blueprint. Se indica revisar Blueprint y aplicar render.yaml actual, o configurar Python 3, raíz del repositorio y comandos locales. Sin logs no se atribuye causa exacta al runtime. Solicitados logs del intento fallido si persiste. Sin cambios de código, configuración remota ni push. Fuentes: https://render.com/docs/native-runtimes y https://render.com/docs/infrastructure-as-code .
+  - **Archivos modificados:** BITACORA.md.
+
+- [x] **2026-10-08 22:44:32 UTC-06:00 — Verificar despliegue Python de Render**
+  - **Prompt:** [Solo imagen, sin texto: lingora-api con Python 3, commit 81330e5 Live y despliegue activado por Blueprint.]
+  - **Resumen:** Confirmado mediante consultas públicas: /api/health HTTP 200 con PostgreSQL y /api/voice/config HTTP 200 con enabled:false, modelo gemini-3.8-live, voces Kore/Puck/Aoede y límite de 300 segundos. Corregida ausencia de ruta de voz en Render. Práctica todavía deshabilitada; revisar condiciones LIVE_ENABLED, AI_ENABLED, AI_PROVIDER y AI_API_KEY en Environment. render.yaml declara LIVE_ENABLED=false, pero no se inspeccionaron valores privados remotos. Indicada activación y despliegue de variables, seguida de comprobación enabled:true. No se probó micrófono, WebSocket ni Gemini y no se confirma la ruta a través de Cloudflare. Sin cambios de código ni push.
+  - **Archivos modificados:** BITACORA.md.
+
+- [ ] **2026-10-08 22:59:12 UTC-06:00 — Rediseñar conversación de voz y ciclo de sesión**
+  - **Prompt:**
+    > Actualiza la interfaz del chat por voz del proyecto con un diseño moderno, intuitivo y con identidad propia. Toma como referencia la sencillez y fluidez de la experiencia de voz de ChatGPT, adaptándola al estilo visual del proyecto sin copiar su interfaz.
+    >
+    > **Experiencia de uso**
+    >
+    > - Presenta una vista limpia con un elemento visual central que represente al asistente y un botón principal con el texto **«Comenzar»**.
+    > - Al pulsar «Comenzar», solicita permiso para utilizar el micrófono si hace falta e inicia la conversación por voz. Una vez concedido el permiso, el usuario debe poder hablar de forma natural, sin mantener pulsado ningún botón ni activar el micrófono en cada intervención.
+    > - Al comenzar la sesión, sustituye el botón «Comenzar», en la misma posición, por un botón **«Finalizar conversación»**.
+    > - Mantén la sesión activa durante los silencios, las pausas del usuario y las respuestas del asistente. No termines la conversación automáticamente por inactividad ni al concluir una respuesta.
+    > - La conversación debe finalizar cuando el usuario pulse «Finalizar conversación». En ese momento, detén la captura del micrófono, la reproducción de voz y cualquier respuesta en curso; cierra la conexión de la sesión y devuelve la interfaz a su estado inicial, mostrando nuevamente «Comenzar».
+    > - Si ocurre un error técnico que impide continuar, informa al usuario claramente y ofrece una opción para reintentar. No presentes una interrupción técnica como una finalización voluntaria.
+    >
+    > **Diseño y estados visuales**
+    >
+    > Desarrolla una propuesta visual distintiva, coherente con los colores, la tipografía y la personalidad del proyecto. Incorpora animaciones sutiles que permitan reconocer los estados de **conectando, escuchando, procesando y hablando**, acompañadas de textos breves y comprensibles. Evita elementos innecesarios y prioriza la conversación.
+    >
+    > La interfaz debe adaptarse a dispositivos móviles y de escritorio, contar con controles accesibles, buen contraste y navegación mediante teclado, y respetar las preferencias de movimiento reducido.
+    >
+    > **Implementación y validación**
+    >
+    > Revisa primero la implementación existente y aprovecha la integración de voz del proyecto. Implementa el comportamiento real de los controles y de la sesión; no te limites a una maqueta visual. Evita sesiones duplicadas por clics repetidos y muestra mensajes claros cuando el acceso al micrófono sea rechazado o falle la conexión.
+    >
+    > Verifica el flujo completo: comenzar, conceder permisos, conversar durante varios turnos con pausas, finalizar y comenzar una nueva sesión. Confirma que, al finalizar, el micrófono queda liberado y no continúa reproduciéndose ni generándose audio.
+    >
+    > El resultado debe permitir iniciar una conversación con una sola acción, mantenerla abierta sin intervenciones manuales entre turnos y finalizarla con un control claro y siempre disponible.
+  - **Resumen:** Implementado rediseño con identidad Lingora, elemento central y estados conectando/escuchando/procesando/hablando; opciones plegables, inicio con una acción y consentimiento informado junto al control. Finalizar cancela captura, reproducción y WebSocket inmediatamente, invalida eventos tardíos y vuelve a Comenzar. Backend cancela proveedor sin evaluación nueva para stop/desconexión/error; mantiene compatibilidad con finish antiguo. Retirado corte por duración, conservadas cuotas/concurrencia con renovación de reservas y transcripción acotada; activada compresión de contexto del proveedor. Se restaura el estado del micrófono después de reconexión o retorno de pestaña, respetando silencio explícito. Pruebas: 27 frontend aprobadas, 26 backend existentes aprobadas y 21 de voz aprobadas tras ampliar cobertura; TypeScript y Vite correctos. Verificados con simulaciones permiso rechazado/tardío, clics repetidos, varios turnos, pausas, nuevo inicio, cierre de pistas/cola/conexión/proveedor y ausencia de evaluación al parar. Pendiente revisión visual móvil/escritorio y conversación con micrófono real: inventario de herramientas no muestra navegador conectado. Sin publicación ni despliegue.
+  - **Archivos modificados:** front/src/components/VoiceTutor.tsx y voice.css; front/src/lib/useVoiceSession.ts y voiceTypes.ts; back/voice.py; pruebas de voz frontend/backend; .env.example, render.yaml, docs/VOICE_TUTOR.md y BITACORA.md. Compilación front/dist regenerada (ignorada por Git).
+
+- [ ] **2026-10-08 23:19:10 UTC-06:00 — Adaptar interfaz móvil y agregar temas**
+  - **Prompt:**
+    > Actualiza la interfaz del proyecto para ofrecer una experiencia profesional en teléfonos móviles e incorpora una opción para cambiar entre modo claro y modo noche.
+    >
+    > **Adaptación a teléfonos**
+    >
+    > Revisa todas las pantallas y corrige cualquier problema de distribución: elementos superpuestos, textos cortados, botones fuera de pantalla, espacios inconsistentes y desplazamiento horizontal accidental.
+    >
+    > - Adapta los componentes al ancho disponible utilizando diseños flexibles. Evita dimensiones y posiciones fijas que provoquen problemas en pantallas pequeñas.
+    > - Establece una jerarquía visual clara, con tipografía legible, márgenes uniformes y suficiente separación entre elementos.
+    > - Asegura que menús, formularios, tarjetas, ventanas emergentes y controles puedan utilizarse cómodamente con los dedos, con áreas táctiles de al menos 44 × 44 píxeles.
+    > - Considera las zonas seguras del dispositivo, las barras del navegador y la aparición del teclado virtual. Ningún campo activo ni acción principal debe quedar oculto.
+    > - Permite desplazamiento vertical cuando sea necesario. No ocultes contenido ni reduzcas excesivamente su tamaño para forzarlo a caber.
+    > - En el chat por voz, mantén visibles y accesibles el indicador de estado y los botones «Comenzar» y «Finalizar conversación», respetando su funcionamiento actual.
+    > - Conserva una presentación coherente en tabletas y escritorio.
+    >
+    > **Modo noche**
+    >
+    > Agrega un control visible y accesible para seleccionar **Claro, Oscuro o Sistema**. La opción «Sistema» debe seguir la preferencia del dispositivo.
+    >
+    > - Aplica el tema de forma consistente a toda la aplicación: fondos, textos, botones, campos, menús, ventanas emergentes, bordes e iconos.
+    > - Diseña una paleta oscura acorde con la identidad del proyecto, con contraste suficiente y estados claramente distinguibles. No te limites a invertir los colores.
+    > - Guarda la elección del usuario para conservarla al recargar o volver a abrir la aplicación.
+    > - Aplica el tema desde la carga inicial para evitar destellos del tema contrario.
+    > - Asegura que los estados de interacción, error, deshabilitado y foco sean legibles en ambos modos.
+    >
+    > **Implementación y validación**
+    >
+    > Inspecciona primero la estructura y los estilos existentes. Corrige las causas de los problemas y reutiliza los componentes del proyecto; evita parches que solo funcionen en un dispositivo o que oculten los desbordamientos sin resolverlos.
+    >
+    > Comprueba todas las pantallas en anchos de 320, 360, 390 y 430 píxeles, en orientación vertical y horizontal, y con el teclado abierto en los formularios. Valida ambos temas y verifica que el contenido siga siendo utilizable al ampliar el texto.
+    >
+    > El trabajo estará completo cuando no existan superposiciones ni recortes, todas las acciones sean accesibles en teléfonos y el modo noche funcione de manera uniforme y persistente. Al terminar, resume los cambios realizados y las comprobaciones efectuadas, indicando cualquier limitación pendiente.
+  - **Resumen:** Implementada adaptación compartida de inicio, catálogo/lecciones, glosario, repasos/progreso, diagnóstico, cuenta, autenticación, tutor por texto y voz. Menú móvil reemplaza barra de siete opciones; columnas flexibles, texto sin truncado de cabecera, ilustración separada del contenido, áreas táctiles de 44 px, formularios desplazables, márgenes de zonas seguras y adaptación a visualViewport para teclado. Diálogos y menú tienen Escape, retención y devolución del foco. Selector Claro/Oscuro/Sistema persistente en localStorage, sincronizado entre pestañas y con cambios del sistema; script anterior a CSS/React aplica tema desde la carga. Paletas semánticas para fondos, campos, controles, errores, deshabilitados y voz; verificados contrastes 4.5:1 de texto y 3:1 de límites de campos. Conservado ciclo de sesión de voz y añadido estado visible junto a la acción adherida. Validación: 31 pruebas frontend de suite completa aprobadas; cinco pruebas nuevas de tema/navegación/viewport aprobadas tras añadir cobertura de teclado (32 pruebas distintas en total), TypeScript y compilación Vite correctos. Navegación/foco probados con dimensiones simuladas 320/360/390/430 y alturas verticales/horizontales. JSDOM no calcula layout: quedan pendientes revisión visual de todas las pantallas en ambos temas, texto ampliado al 200 %, orientaciones, teclado real y dispositivos; no hay navegador conectado en las herramientas. Documentado alcance en docs/MOBILE_AND_THEMES.md. No se puede afirmar ausencia absoluta de solapamientos sin esas comprobaciones. Sin push ni despliegue.
+  - **Archivos modificados:** front/index.html, public/theme-init.js; App.tsx, main.tsx, theme.css, responsive.css; ThemeSelect.tsx, Auth.tsx, ResetPassword.tsx y VoiceTutor.tsx; lib/theme.ts, useDialog.ts y useViewport.ts; tests/theme.test.ts y voice-ui.test.ts; docs/MOBILE_AND_THEMES.md y BITACORA.md. front/dist regenerado, ignorado por Git.
+
+- [ ] **2026-10-08 23:33:10 UTC-06:00 — Publicar interfaz de voz, móvil y temas en ambos repositorios**
+  - **Prompt:**
+    > haz el push
+  - **Resumen:** Pendiente de publicar y verificar el mismo commit en main de origin y personal. Se conserva la validación previa de TypeScript, compilación Vite y pruebas de voz, tema y navegación. Las comprobaciones visuales en dispositivos y conversación con micrófono real siguen pendientes. Se excluyen secretos, compilados y el repositorio anidado LINGORA-IA.
+  - **Archivos modificados:** Código, pruebas y documentación de voz, adaptación móvil y temas; BITACORA.md.

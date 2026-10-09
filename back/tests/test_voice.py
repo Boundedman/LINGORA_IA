@@ -140,7 +140,7 @@ def test_malformed_controls_close_and_release(enabled, message):
     uid=signup(enabled)
     with enabled.websocket_connect('/api/voice/live', headers=ORIGIN) as ws:
         ws.send_json(OPTIONS);until(ws,'ready');ws.send_json(message)
-        assert until(ws,'summary')['summary']['partial'] is True
+        assert until(ws,'error')['message'].startswith('Se interrumpió')
     with database() as conn:assert rows(conn,'voice_sessions',uid)[0]['status']=='finished'
     assert Provider.instances[0].closed
 
@@ -174,15 +174,57 @@ def test_finish_during_provider_setup_does_not_leave_a_lease(enabled, monkeypatc
     with database() as conn:assert rows(conn,'voice_sessions',uid)[0]['status']=='finished'
 
 
-def test_server_duration_cannot_be_extended_by_browser(enabled, monkeypatch):
+def test_pauses_and_multiple_turns_do_not_end_session_and_stop_cancels_provider(enabled, monkeypatch):
     original=voice.config
-    monkeypatch.setattr(voice,'config',lambda:{**original(),'max_seconds':.15})
+    monkeypatch.setattr(voice,'config',lambda:{**original(),'max_seconds':.05})
+    evaluations=[]
+    async def forbidden(*args):
+        evaluations.append(args)
+        raise AssertionError('Stopping must not generate an evaluation')
+    monkeypatch.setattr(voice,'evaluate',forbidden)
+    original_send=Provider.send
+    async def reply(self, raw):
+        await original_send(self, raw)
+        if json.loads(raw).get('realtimeInput',{}).get('audio'):
+            await self.queue.put(json.dumps({'serverContent':{'outputTranscription':{'text':'Another reply'},'turnComplete':True}}))
+    monkeypatch.setattr(Provider,'send',reply)
     uid=signup(enabled)
     with enabled.websocket_connect('/api/voice/live',headers=ORIGIN) as ws:
-        ws.send_json(OPTIONS)
-        summary=until(ws,'summary')['summary']
-        assert not summary['partial']
+        ws.send_json(OPTIONS);until(ws,'turn_complete')
+        time.sleep(.12)  # Past the old duration setting, with no user audio.
+        for turn in range(1,4):
+            ws.send_bytes(b'\0\0'*320)
+            assert until(ws,'turn_complete')['turn']==turn
+        ws.send_json({'type':'stop'})
+        with pytest.raises(WebSocketDisconnect):
+            ws.receive_json()
+    assert Provider.instances[0].closed
     with database() as conn:assert rows(conn,'voice_sessions',uid)[0]['status']=='finished'
+    with enabled.websocket_connect('/api/voice/live',headers=ORIGIN) as ws:
+        ws.send_json(OPTIONS);until(ws,'ready');ws.send_json({'type':'stop'})
+        with pytest.raises(WebSocketDisconnect):
+            while True:ws.receive_json()
+    assert all(p.closed for p in Provider.instances)
+    assert evaluations==[]
+
+
+def test_active_lease_renews_and_transcript_rolls_without_ending_conversation(enabled):
+    uid=signup(enabled)
+    sid=voice.reserve(uid,None,False)
+    with database() as conn:
+        lease=rows(conn,'voice_sessions',uid)[0]
+        lease['expires_at']=time.time()-1
+        put(conn,'voice_sessions',uid,sid,lease)
+    voice.renew(uid,sid)
+    with database() as conn:
+        assert rows(conn,'voice_sessions',uid)[0]['expires_at']>time.time()+40
+    session=voice.VoiceSession(None,{'id':uid},VoiceOptions(**OPTIONS),voice.config(),sid)
+    for turn in range(150):
+        session.turn=turn
+        session.transcript('user','x'*500)
+    assert len(session.turns)<=120
+    assert sum(len(t['text']) for t in session.turns)<=24000
+    assert session.turns[-1]['id']=='149-user'
 
 
 def test_evaluator_receives_only_server_transcript_and_fails_closed(monkeypatch):
@@ -230,6 +272,6 @@ def test_provider_disconnect_midturn_closes_without_unsafe_resume(enabled, monke
     signup(enabled)
     with enabled.websocket_connect('/api/voice/live',headers=ORIGIN) as ws:
         ws.send_json(OPTIONS)
-        assert until(ws,'summary')['summary']['partial']
+        assert until(ws,'error')['message'].startswith('Se interrumpió')
     assert len(Provider.instances)==1
     assert Provider.instances[0].closed

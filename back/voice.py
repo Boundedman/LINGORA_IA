@@ -48,7 +48,7 @@ def config():
                and os.getenv('AI_PROVIDER', 'gemini') == 'gemini' and bool(os.getenv('AI_API_KEY'))
                and model in MODELS)
     return {'enabled': enabled, 'model': model if model in MODELS else None,
-            'voices': list(VOICES), 'max_seconds': max(30, bounded('LIVE_MAX_SECONDS', 300, 600)),
+            'voices': list(VOICES), 'max_seconds': None,
             'retention_days': 30}
 
 
@@ -114,7 +114,7 @@ def reserve(uid, seconds, save):
             raise HTTPException(429, 'La cuota de voz está agotada. Puedes continuar con lecciones y repasos.')
         sid = str(uuid.uuid4())
         put(conn, 'voice_sessions', uid, sid, dict(id=sid, created_at=now,
-            expires_at=now+seconds+45, status='active', save_summary=save))
+            expires_at=now+45, status='active', save_summary=save))
     return sid
 
 
@@ -129,6 +129,15 @@ def complete(uid, sid, summary, audio_bytes, tokens):
         if lease['save_summary']:
             put(conn, 'voice_summaries', uid, sid, dict(id=sid, created_at=time.time(), **summary))
         return lease['save_summary']
+
+
+def renew(uid, sid):
+    with database() as conn:
+        lease = get(conn, 'voice_sessions', uid, sid)
+        if not lease or lease['status'] != 'active':
+            raise ValueError('Session revoked')
+        lease['expires_at'] = time.time()+45
+        put(conn, 'voice_sessions', uid, sid, lease)
 
 
 def fallback_summary(partial=True):
@@ -170,6 +179,7 @@ def setup(options, model, handle=None):
              'systemInstruction': {'parts': [{'text': instruction(options)}]},
              'inputAudioTranscription': {}, 'outputAudioTranscription': {},
              'sessionResumption': {'handle': handle} if handle else {},
+             'contextWindowCompression': {'slidingWindow': {}},
              'realtimeInputConfig': {'automaticActivityDetection': {'disabled': False}}}
     return {'setup': value}
 
@@ -182,6 +192,7 @@ class VoiceSession:
         self.active_at = None
         self.partial = True
         self.connected = True
+        self.stopped = False
         self.muted = False
         self.turn = 0
         self.turns = []
@@ -204,12 +215,13 @@ class VoiceSession:
         item = next((t for t in self.turns if t['id'] == ident), None)
         if item is None:
             if len(self.turns) >= 120:
-                raise ValueError('Transcript limit')
+                self.turns.pop(0)
             item = dict(id=ident, role=role, text='', final=False)
             self.turns.append(item)
-        if sum(len(t['text']) for t in self.turns) + len(text) > 24000 or len(item['text'])+len(text) > 3000:
-            raise ValueError('Transcript limit')
-        item['text'] += text
+        # Keep a bounded rolling transcript without ending a long conversation.
+        item['text'] = (item['text']+text)[-3000:]
+        while len(self.turns)>1 and sum(len(t['text']) for t in self.turns)>24000:
+            self.turns.pop(0)
         return {'type': 'transcript', **item}
 
     async def receive_browser(self):
@@ -231,8 +243,8 @@ class VoiceSession:
                 if self.muted or self.upstream is None:
                     continue
                 self.input_bytes += len(audio)
-                # 16kHz mono PCM16: bounded burst allowance and total duration.
-                if self.input_bytes > 32000 * min(self.settings['max_seconds']+1, now-self.started+2):
+                # 16kHz mono PCM16: retain real-time rate protection without a duration cutoff.
+                if self.input_bytes > 32000 * (now-self.started+2):
                     raise ValueError('Audio rate limit')
                 self.safe_resume = False
                 await asyncio.wait_for(self.upstream.send(json.dumps({'realtimeInput': {
@@ -246,6 +258,10 @@ class VoiceSession:
                 raise ValueError('Invalid control')
             if control == {'type': 'finish'}:
                 self.partial = False
+                return
+            if control == {'type': 'stop'}:
+                self.partial = False
+                self.stopped = True
                 return
             if control.get('type') == 'mute' and set(control) == {'type', 'muted'} and type(control['muted']) is bool:
                 self.muted = control['muted']
@@ -324,13 +340,10 @@ class VoiceSession:
 
     async def watchdog(self):
         while True:
-            elapsed = time.monotonic()-self.started
-            if elapsed >= self.settings['max_seconds']:
-                self.partial = False
-                return
-            await asyncio.sleep(min(10, self.settings['max_seconds']-elapsed))
+            await asyncio.sleep(10)
             # Session revocation/logout/account deletion also closes existing sockets.
             await run_in_threadpool(auth.current_user, self.ws)
+            await run_in_threadpool(renew, self.user['id'], self.sid)
 
     async def run(self):
         tasks = [asyncio.create_task(fn()) for fn in (self.receive_browser, self.provider, self.watchdog)]
@@ -341,25 +354,34 @@ class VoiceSession:
         except Exception:
             self.partial = True
             with suppress(Exception):
-                await self.emit({'type': 'notice', 'message': 'La conexión terminó. Conservamos solo la evidencia disponible para el resumen.'})
+                await self.emit({'type': 'error', 'message': 'Se interrumpió la conexión de voz. El micrófono está apagado. Puedes reintentar.'})
         finally:
             for task in tasks:
                 task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
             self.upstream = None
             duration = max(0, time.monotonic()-(self.active_at or time.monotonic()))
-            with suppress(Exception):
-                await self.emit({'type': 'finishing'})
-            try:
-                summary = await asyncio.wait_for(evaluate(self.turns, self.partial, duration), 18)
-            except (Exception, asyncio.CancelledError):
-                summary = fallback_summary(True)
+            if self.stopped or not self.connected or self.partial:
+                # A stopped/disconnected session must never start further model work.
+                summary = fallback_summary(self.partial)
                 summary['duration_seconds'] = round(duration)
-            saved = await run_in_threadpool(complete, self.user['id'], self.sid, summary, self.input_bytes, self.total_tokens)
-            self.turns.clear()
-            with suppress(Exception):
-                await self.emit({'type': 'summary', 'summary': summary, 'saved': saved})
-                await self.ws.close(code=1000)
+                await run_in_threadpool(complete, self.user['id'], self.sid, summary, self.input_bytes, self.total_tokens)
+                self.turns.clear()
+                with suppress(Exception):
+                    await self.ws.close(code=1000 if self.stopped else 1011)
+            else:
+                with suppress(Exception):
+                    await self.emit({'type': 'finishing'})
+                try:
+                    summary = await asyncio.wait_for(evaluate(self.turns, self.partial, duration), 18)
+                except (Exception, asyncio.CancelledError):
+                    summary = fallback_summary(True)
+                    summary['duration_seconds'] = round(duration)
+                saved = await run_in_threadpool(complete, self.user['id'], self.sid, summary, self.input_bytes, self.total_tokens)
+                self.turns.clear()
+                with suppress(Exception):
+                    await self.emit({'type': 'summary', 'summary': summary, 'saved': saved})
+                    await self.ws.close(code=1000)
 
 
 @router.websocket('/live')

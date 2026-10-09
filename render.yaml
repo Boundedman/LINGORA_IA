@@ -25,8 +25,6 @@ services:
         value: "false"
       - key: LIVE_MODEL
         value: gemini-3.8-live
-      - key: LIVE_MAX_SECONDS
-        value: "300"
       - key: LIVE_DAILY_SESSIONS_PER_USER
         value: "3"
       - key: LIVE_DAILY_SESSIONS_GLOBAL

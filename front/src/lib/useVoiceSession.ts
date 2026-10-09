@@ -12,6 +12,7 @@ export function useVoiceSession(){
   const current=useRef<VoiceState>('ready'),started=useRef(0),lastTurn=useRef(-1),ignored=useRef(-1);
   const deadline=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
   const alive=useRef(true);
+  const userMuted=useRef(false);
   const lastActivity=useRef(0),hinted=useRef(false);
   function change(next:VoiceState){current.current=next;if(alive.current)setState(next);}
   function cleanupAudio(){audio.current?.close();audio.current=null;if(alive.current)setLevels({input:0,output:0,speaking:false});}
@@ -23,14 +24,14 @@ export function useVoiceSession(){
     setSeconds(Math.floor(elapsed()));setSummary(emptySummary(elapsed()));setError(message);change(message?'error':'finished');
   }
   function finish(){
-    if(['ready','finished','error','finishing'].includes(current.current))return;
+    if(['ready','finished','error'].includes(current.current))return;
+    ++generation.current;
     cleanupAudio();
-    if(socket.current?.readyState===WebSocket.OPEN&&['active','reconnecting'].includes(current.current)){
-      change('finishing');socket.current.send(JSON.stringify({type:'finish'}));
-      clearTimeout(deadline.current);deadline.current=setTimeout(()=>localEnd('El resumen no estuvo disponible. El micrófono ya está apagado.'),22000);
-    }else localEnd();
+    try{if(socket.current?.readyState===WebSocket.OPEN)socket.current.send(JSON.stringify({type:'stop'}));}catch{/* Closing the socket also cancels the server session. */}
+    disconnect();started.current=0;setSeconds(0);setTurns([]);setSummary(null);setError('');setWaiting(false);setGentleHint(false);setMuted(false);userMuted.current=false;change('ready');
   }
   function mute(value:boolean){
+    userMuted.current=value;
     audio.current?.mute(value);setMuted(value);
     if(socket.current?.readyState===WebSocket.OPEN)socket.current.send(JSON.stringify({type:'mute',muted:value}));
   }
@@ -40,7 +41,7 @@ export function useVoiceSession(){
     if(!options.consent)return;
     disconnect();cleanupAudio();const token=++generation.current;
     setError('');setSummary(null);setTurns([]);setSaved(false);setMuted(false);setSeconds(0);setWaiting(false);setGentleHint(false);hinted.current=false;lastActivity.current=performance.now();
-    started.current=0;ignored.current=-1;lastTurn.current=-1;
+    started.current=0;ignored.current=-1;lastTurn.current=-1;userMuted.current=false;
     change('permission');
     try{
       if(!navigator.mediaDevices?.getUserMedia||!window.AudioContext||!window.AudioWorkletNode)throw new Error('Tu navegador no permite audio en tiempo real. Usa HTTPS y un navegador compatible.');
@@ -65,7 +66,7 @@ export function useVoiceSession(){
           if(message.type==='ready'){
             if(current.current==='finishing')return;
             clearTimeout(deadline.current);if(!started.current)started.current=performance.now();
-            change('active');const pause=Boolean(message.resumed)||document.hidden;engine.mute(pause);setMuted(pause);
+            change('active');const pause=userMuted.current||document.hidden;engine.mute(pause);setMuted(pause);
             ws.send(JSON.stringify({type:'mute',muted:pause}));
           }else if(message.type==='reconnecting'){
             if(current.current==='finishing')return;
@@ -75,7 +76,7 @@ export function useVoiceSession(){
           }else if(message.type==='interrupted'){
             ignored.current=message.turn;engine.stopSpeaker();
           }else if(message.type==='transcript'){
-            if(message.role==='user'&&!message.final)setWaiting(true);
+            if(message.role==='user')setWaiting(true);
             setTurns(previous=>{const turn={id:message.id,role:message.role,text:message.text,final:message.final} as VoiceTurn;return [...previous.filter(t=>t.id!==turn.id),turn].slice(-120);});
           }else if(message.type==='turn_complete'){
             setWaiting(false);
@@ -106,7 +107,7 @@ export function useVoiceSession(){
       if(measured.speaking||measured.input>.04){lastActivity.current=performance.now();setGentleHint(false);}
       else if(!hinted.current&&current.current==='active'&&performance.now()-lastActivity.current>30000){hinted.current=true;setGentleHint(true);}
     },100);
-    const hide=()=>{document.documentElement.dataset.voiceHidden=String(document.hidden);if(document.hidden&&['active','reconnecting'].includes(current.current)){mute(true);audio.current?.stopSpeaker();setLevels({input:0,output:0,speaking:false});}};
+    const hide=()=>{document.documentElement.dataset.voiceHidden=String(document.hidden);if(['active','reconnecting'].includes(current.current)){const pause=document.hidden||userMuted.current;audio.current?.mute(pause);setMuted(pause);if(socket.current?.readyState===WebSocket.OPEN)socket.current.send(JSON.stringify({type:'mute',muted:pause}));if(document.hidden){audio.current?.stopSpeaker();setLevels({input:0,output:0,speaking:false});}}};
     const leave=()=>{cleanupAudio();disconnect();++generation.current;setSummary(emptySummary(elapsed()));change('finished');};
     document.addEventListener('visibilitychange',hide);window.addEventListener('pagehide',leave);
     return()=>{alive.current=false;clearInterval(timer);document.removeEventListener('visibilitychange',hide);window.removeEventListener('pagehide',leave);delete document.documentElement.dataset.voiceHidden;++generation.current;cleanupAudio();disconnect();};
