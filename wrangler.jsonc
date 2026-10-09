@@ -1,5 +1,5 @@
 {
-  "name": "lingora-ia-v3",
+  "name": "lingora_ia",
   "main": "cloudflare/worker.mjs",
   "compatibility_date": "2026-09-24",
   "assets": {
