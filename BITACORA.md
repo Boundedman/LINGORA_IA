@@ -787,8 +787,8 @@ Se registrarán las nuevas solicitudes de esta conversación con su resultado y 
   - **Archivos modificados:** `BITACORA.md`; `front/src/App.tsx`, `components/Auth.tsx`, `components/Avatar.tsx`, `components/Landing.tsx`, `lib/motion.ts`, `lib/db.ts`, `lib/useLearner.ts`, estilos de landing/tema, `main.tsx`; eliminados `PhotoPicker.tsx` y `AccountPhoto.tsx`; `back/main.py`, `back/auth.py`, `back/schema.sql`, requisitos y pruebas; documentación de frontend, backend, despliegue y base de datos; nueva guía `docs/PROFILE_PHOTO_RETIREMENT.md`; `package.json` y lockfile; pruebas frontend. `back/curriculum.json` regenerado por build.
   - **Validación:** TypeScript y build de producción correctos (28 lecciones exportadas; Vite generado). Suite frontend aprobada; pruebas backend no ejecutables por falta de Python. Motion 14.3.0 instalado desde `motion/react` según documentación oficial; `npm install` reportó una vulnerabilidad alta en el árbol de dependencias, sin aplicar cambios de auditoría fuera del alcance.
 
-- [ ] **2026-10-18 — Publicar cambios mediante push dual**
+- [x] **2026-10-18 — Publicar cambios mediante push dual**
   - **Prompt:**
     > haz el push con la skill dual push a los repositorios de github
-  - **Resumen:** En curso: revisada `docs/skills/lingora-push-dual/SKILL.md`; `origin` y `personal` apuntan a los dos destinos y se descargaron ambos `main`. Las ramas remotas coinciden con `HEAD` local antes de integrar los cambios de la sesión anterior. `inicio-sesion.md` se excluye del commit.
+  - **Resumen:** Publicado `dc145caf12e2dad9f3bb9903cb75873dff16ae89` en `main` de Lingora-IA/LINGORA-IA-V2 y Boundedman/LINGORA_IA. `git ls-remote` confirmó el mismo SHA en ambos destinos. Se excluyó `inicio-sesion.md`; no se afirma que el despliegue se haya completado.
   - **Archivos modificados:** Cambios descritos en la entrada anterior y este registro de publicación.
