@@ -12,6 +12,6 @@ Las pruebas eliminan DATABASE_URL de su entorno para no tocar la base configurad
 
 También se verifica la recuperación del nombre desde perfiles anteriores, la conservación de hashes y avances tras actualizar el esquema dos veces, y el rollback conjunto de nombre y perfil.
 
-Se comprueban nombre obligatorio, fotos inválidas sin creación parcial de cuenta, normalización a JPEG, persistencia tras login, aislamiento por usuario y eliminación de avatares.
+Se comprueban nombre obligatorio, rechazo del campo de foto retirado, exportación de registros de avatar existentes y eliminación en cascada junto con la cuenta.
 
 El tutor responde con una redirección al aprendizaje cuando el proveedor devuelve contenido no validable o vacío, incluso después de guardar un interés. No expone ese contenido ni lo guarda como explicación en caché. Los fallos reales de conexión mantienen HTTP 503.

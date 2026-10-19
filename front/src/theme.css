@@ -39,7 +39,7 @@ h1,h2,h3,strong{color:inherit}
 .message.user{background:var(--accent-soft)}
 .message p,.message small,.tutor-tips p,.tutor-tips li,.chat-panel>small,.skill-card small,.skill-grid p,.glossary-practice p{color:var(--muted)}
 .message p,.feedback p,.notice p{color:var(--ink)}
-.chat-welcome,.chat-messages,.message,.chat-compose,.account-photo,.daily-steps button{border-color:var(--line)}
+.chat-welcome,.chat-messages,.message,.chat-compose,.daily-steps button{border-color:var(--line)}
 .interest-note strong,.interest-note p{color:var(--ink)}
 .review-card{background:linear-gradient(145deg,var(--surface),var(--success-bg))}
 .icon-tile.violet,.round-button,.avatar,.profile-avatar{background:var(--accent-soft);color:var(--violet);border-color:var(--line)}

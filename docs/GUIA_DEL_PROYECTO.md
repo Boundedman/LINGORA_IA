@@ -55,4 +55,4 @@ Más detalles: [ARCHITECTURE.md](ARCHITECTURE.md), [DATABASE.md](DATABASE.md), [
 
 ## Registro y configuración de cuenta
 
-Para crear una cuenta se pide nombre, correo y contraseña; la foto es opcional. El avatar de la navegación abre Configuración de cuenta, donde aparecen correo, foto y perfil. Se puede subir o quitar la foto, actualizar contraseña, exportar datos, cerrar sesión y cambiar de cuenta. Cambiar de cuenta cierra la sesión actual y abre el formulario de acceso. JPG/PNG/WebP: hasta 2 MB y 16 megapíxeles; el servidor guarda una versión de 256×256.
+Para crear una cuenta se pide nombre, correo y contraseña. El avatar de la navegación muestra iniciales y abre Configuración de cuenta, donde aparecen correo y perfil. Se puede actualizar la contraseña, exportar datos, cerrar sesión y cambiar de cuenta. Cambiar de cuenta cierra la sesión actual y abre el formulario de acceso.

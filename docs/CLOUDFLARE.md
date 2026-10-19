@@ -33,7 +33,7 @@ vuelve a desplegar Cloudflare. Esa URL es pública, no es una contraseña.
 Las claves privadas permanecen en Render.
 
 Comprueba en la URL de Cloudflare `/api/health`, registro, inicio de sesión,
-foto y tutor. La interfaz mantiene las solicitudes `/api` en su propio dominio;
+perfil y tutor. La interfaz mantiene las solicitudes `/api` en su propio dominio;
 el Worker las envía a FastAPI. No hace falta abrir CORS a todos los orígenes.
 Si cambias el dominio, actualiza `APP_URL` en el backend.
 

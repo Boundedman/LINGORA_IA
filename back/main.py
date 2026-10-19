@@ -84,7 +84,6 @@ class Email(Input):
 
 class Signup(Credentials):
     display_name: str = Field(min_length=1, max_length=80)
-    avatar_data: str | None = Field(default=None, max_length=2_800_000)
 
     @field_validator('display_name')
     @classmethod
@@ -92,9 +91,6 @@ class Signup(Credentials):
         if not value.strip():
             raise ValueError('El nombre es obligatorio')
         return value.strip()
-
-class AvatarInput(Input):
-    avatar_data: str | None = Field(max_length=2_800_000)
 
 class Password(Input):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=False)
@@ -191,8 +187,7 @@ def password(body: Password, request: Request, response: Response):
 def learner(user=Depends(auth.current_user)):
     uid = user['id']
     with database() as conn:
-        avatar = get(conn, 'avatars', uid, uid)
-        return dict(profile=get(conn, 'profiles', uid, uid), avatar_data=avatar['data_url'] if avatar else None, progress=rows(conn, 'lesson_progress', uid),
+        return dict(profile=get(conn, 'profiles', uid, uid), progress=rows(conn, 'lesson_progress', uid),
             reviews=sorted(rows(conn, 'reviews', uid), key=lambda r:r['next_review']),
             diagnostic=get(conn, 'diagnostics', uid, uid), lessons=app.state.lessons)
 
@@ -202,18 +197,6 @@ def profile(body: Profile, user=Depends(auth.current_user)):
         value = get(conn, 'profiles', user['id'], user['id'])
         value.update(body.model_dump(exclude_none=True))
         return put(conn, 'profiles', user['id'], user['id'], value)
-
-@app.post('/api/account/avatar')
-def avatar(body: AvatarInput, user=Depends(auth.current_user)):
-    from .avatars import normalize_avatar
-    data = normalize_avatar(body.avatar_data)
-    uid = user['id']
-    with database() as conn:
-        if data is None:
-            conn.execute("DELETE FROM records WHERE kind='avatars' AND user_id=? AND id=?", (uid, uid))
-        else:
-            put(conn, 'avatars', uid, uid, {'data_url': data})
-    return {'avatar_data': data}
 
 @app.post('/api/rpc/submit_exercise')
 def submit(body: Exercise, user=Depends(auth.current_user)):

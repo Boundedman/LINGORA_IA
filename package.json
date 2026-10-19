@@ -11,7 +11,7 @@
     "dev:ui": "vite --config front/vite.config.ts --host 127.0.0.1",
     "build": "tsc --noEmit -p front/tsconfig.json && tsx --tsconfig front/tsconfig.json scripts/export-curriculum.ts && vite build --config front/vite.config.ts",
     "preview": "vite preview --config front/vite.config.ts --host 127.0.0.1",
-    "test": "tsx --tsconfig front/tsconfig.json --test front/tests/*.test.ts",
+    "test": "tsx --tsconfig front/tsconfig.json --test --test-concurrency=1 front/tests/*.test.ts",
     "lint": "tsc --noEmit -p front/tsconfig.json",
     "start": "node scripts/python.mjs -m uvicorn back.main:app --host 127.0.0.1 --port 8000",
     "test:backend": "node scripts/python.mjs -m pytest -c back/pytest.ini back/tests -q",
@@ -23,6 +23,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
     "lucide-react": "^0.468.0",
+    "motion": "^14.3.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "zod": "^3.24.0"

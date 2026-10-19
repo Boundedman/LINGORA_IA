@@ -12,6 +12,6 @@ Ejecuta `npm test` desde la raíz y `npm run lint` para tipos. Complementan `bac
 
 La prueba de interfaz también abre el vocabulario y comprueba texto, ubicación y atributos de los enlaces Cambridge. No consulta el sitio externo durante los tests.
 
-Las pruebas de interfaz también cubren registro con nombre y avatar por defecto, carga/eliminación de foto y cambio de cuenta con una respuesta anterior retrasada.
+Las pruebas de interfaz también cubren la landing, registro sin datos de foto, avatar con iniciales y cambio de cuenta con una respuesta anterior retrasada.
 
 También verifican que navegar no invoque IA, que los eventos repetidos de foco no dupliquen la recarga de datos y que guardar el perfil use la respuesta del servidor sin descargar otra vez el catálogo. El tutor se prueba al salir, recibir una respuesta tardía y regresar desde la caché de navegación: vuelve a pedir temática y descarta el texto de la conversación anterior.

@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import {JSDOM} from 'jsdom';
 import React from 'react';
 const dom=new JSDOM('<!doctype html><html><head><meta name="theme-color"></head><body></body></html>',{url:'https://lingora.test/',pretendToBeVisual:true});
-Object.assign(globalThis,{window:dom.window,document:dom.window.document,HTMLElement:dom.window.HTMLElement,location:dom.window.location,IS_REACT_ACT_ENVIRONMENT:true});
+Object.assign(globalThis,{window:dom.window,document:dom.window.document,Element:dom.window.Element,HTMLElement:dom.window.HTMLElement,SVGElement:dom.window.SVGElement,location:dom.window.location,IS_REACT_ACT_ENVIRONMENT:true});
 Object.defineProperty(globalThis,'navigator',{value:dom.window.navigator,configurable:true});
 dom.window.scrollTo=()=>{};
 let dark=false,compact=false;
@@ -50,6 +50,7 @@ test('mobile navigation exposes every destination and dialogs preserve keyboard 
  globalThis.fetch=(async url=>new Response(JSON.stringify(String(url).endsWith('/learner')?{lessons:curriculum,progress:[],reviews:[]}:{session:null}))) as typeof fetch;
  compact=true;
  render(React.createElement(App));
+ fireEvent.click(await screen.findByRole('button',{name:'Explorar lecciones como invitado'}));
  for(const width of [320,360,390,430]){
   Object.defineProperty(window,'innerWidth',{configurable:true,value:width});
   for(const height of [800,320]){

@@ -14,7 +14,7 @@ export const db={
   async getSession(){try{return {data:await api<{session:Session|null}>('auth/session'),error:null};}catch(error){return {data:{session:null},error:error as Error};}},
   onAuthStateChange(fn:(event:string,session:Session|null)=>void){listeners.add(fn);return {data:{subscription:{unsubscribe(){listeners.delete(fn);}}}};},
   signInWithPassword(values:{email:string;password:string}){return result(async()=>{await api('auth/login',values);return notify();});},
-  signUp(values:{display_name:string;email:string;password:string;avatar_data?:string|null}){return result(async()=>{await api('auth/signup',values);return notify();});},
+  signUp(values:{display_name:string;email:string;password:string}){return result(async()=>{await api('auth/signup',values);return notify();});},
   resetPasswordForEmail(email:string){return result(()=>api('auth/reset',{email}));},
   updateUser(values:{password:string;token?:string}){return result(async()=>{await api('auth/password',values);return notify();});},
   async signOut(){await api('auth/logout',{});listeners.forEach(fn=>fn('SIGNED_OUT',null));}

@@ -59,4 +59,4 @@ Las 28 lecciones y el glosario siguen en los archivos del proyecto; las claves d
 
 ## Fotos de perfil
 
-`records` con kind=avatars guarda un JPEG de 256×256 como data_url, asociado al usuario. Se incluye en la exportación de cuenta y se borra por cascada al eliminarla. No requiere una tabla adicional ni un bucket público. Sin registro de foto, el frontend muestra el avatar predeterminado. La foto se valida y recodifica sin EXIF; no se envía al tutor Gemini. El nombre es obligatorio al registrarse y continúa sincronizado con users.display_name.
+Las cuentas antiguas pueden conservar registros `kind=avatars`; la interfaz actual ya no los lee ni los escribe. Siguen incluidos en la exportación. No se borran automáticamente. Consulta [el procedimiento de retiro y conservación](PROFILE_PHOTO_RETIREMENT.md) antes de limpiar esos datos. El nombre obligatorio del perfil continúa sincronizado con `users.display_name` y se usa para mostrar iniciales.

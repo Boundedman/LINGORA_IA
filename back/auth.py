@@ -36,8 +36,6 @@ def issue_session(conn, uid, response):
                         secure=os.getenv("COOKIE_SECURE", "false") == "true")
 
 def login(body, response: Response, signup=False):
-    from .avatars import normalize_avatar
-    avatar = normalize_avatar(body.avatar_data) if signup else None
     email = body.email.strip().lower()
     if "@" not in email or len(email) > 254:
         raise HTTPException(422, "Correo inválido.")
@@ -51,8 +49,6 @@ def login(body, response: Response, signup=False):
             conn.execute("INSERT INTO users (id,email,password) VALUES(?,?,?)", (uid, email, password_hash(body.password)))
             put(conn, "profiles", uid, uid, dict(id=uid, display_name=body.display_name, level="A1", level_source="declared",
                 interest="", daily_minutes=15, onboarded=False))
-            if avatar:
-                put(conn, 'avatars', uid, uid, {'data_url': avatar})
         else:
             # Equal-cost hashing for unknown users as well.
             stored = row["password"] if row else "00"*16 + ":" + "00"*32

@@ -15,8 +15,6 @@ En «Palabras de esta unidad», `LessonView.tsx` ofrece «Consultar en Cambridge
 
 El botón «Explorar el glosario» abre el contenido propio dentro de LINGORA. También está disponible desde «Glosario» en la navegación principal; las consultas locales no dependen de que Cambridge abra.
 
-- `Avatar.tsx`: foto circular o icono de usuario predeterminado, compartido por la navegación y los formularios.
-- `PhotoPicker.tsx`: selección local, límites de archivo y vista previa de JPG/PNG/WebP.
-- `AccountPhoto.tsx`: guarda o quita la foto desde la configuración de cuenta.
+- `Avatar.tsx`: avatar con iniciales del usuario para la navegación.
 
-El registro pide nombre, correo y contraseña, con foto opcional. Mi cuenta abre configuración desde el avatar. Cambiar de cuenta invalida la sesión actual y abre el acceso; no mantiene varias sesiones simultáneas.
+El registro pide nombre, correo y contraseña. Mi cuenta abre configuración desde el avatar de iniciales. Cambiar de cuenta invalida la sesión actual y abre el acceso; no mantiene varias sesiones simultáneas.

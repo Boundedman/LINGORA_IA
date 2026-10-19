@@ -21,6 +21,5 @@ Desde la raíz ejecuta `npm start` o `.venv\Scripts\python.exe -m uvicorn back.m
 
 `DATABASE_URL` activa PostgreSQL; sin esa variable se usa `data/lingora.sqlite3`. Los secretos están en `.env`. Cada operación privada se limita al usuario de sesión. Las transacciones y versiones evitan duplicar respuestas. Consulta [arquitectura](../docs/ARCHITECTURE.md) y [datos](../docs/DATABASE.md).
 
-- `avatars.py`: valida fotos de hasta 2 MB y 16 megapíxeles mediante Pillow, corrige orientación y guarda un JPEG de 256×256 sin metadatos. Solo admite JPG, PNG y WebP.
 
-El registro requiere display_name y admite avatar_data opcional. POST /api/account/avatar actualiza la foto del usuario autenticado (null restaura el avatar predeterminado).
+El registro requiere display_name. Los endpoints de foto de perfil se retiraron; las cuentas antiguas conservan sus registros `avatars` para exportación hasta que el usuario solicite su eliminación. Consulta `docs/PROFILE_PHOTO_RETIREMENT.md`.

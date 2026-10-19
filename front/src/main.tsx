@@ -5,4 +5,7 @@ import './styles.css';
 import './components/voice.css';
 import './theme.css';
 import './responsive.css';
-ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
+import './landing.css';
+import './landing-explore.css';
+import {MotionConfig} from 'motion/react';
+ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><MotionConfig reducedMotion="user"><App/></MotionConfig></React.StrictMode>);

@@ -90,48 +90,19 @@ def test_upgrade_preserves_existing_accounts_and_progress(client):
         assert get(conn, 'profiles', uid, uid)['display_name'] == 'María'
 
 
-def test_signup_name_avatar_validation_and_account_isolation(client):
-    import base64
-    from io import BytesIO
-    from PIL import Image
+def test_signup_rejects_legacy_photo_and_preserves_existing_avatar_records(client):
     credentials = {'email':'photo@example.com','password':'safe-password-123'}
     assert client.post('/api/auth/signup',json=credentials).status_code == 422
     assert client.post('/api/auth/signup',json={**credentials,'display_name':'   '}).status_code == 422
-    assert client.post('/api/account/avatar',json={'avatar_data':None}).status_code == 401
-    invalid = 'data:image/png;base64,' + base64.b64encode(b'not an image').decode()
-    assert client.post('/api/auth/signup',json={**credentials,'display_name':'Ana','avatar_data':invalid}).status_code == 422
-    with database() as conn:
-        assert not conn.execute('SELECT 1 FROM users WHERE email=?',(credentials['email'],)).fetchone()
-    output = BytesIO()
-    Image.new('RGBA',(600,400),(200,100,50,128)).save(output,format='PNG')
-    uploaded = 'data:image/png;base64,' + base64.b64encode(output.getvalue()).decode()
-    response = client.post('/api/auth/signup',json={**credentials,'display_name':'  Ana María  ','avatar_data':uploaded})
+    response = client.post('/api/auth/signup',json={**credentials,'display_name':'Ana'})
     assert response.status_code == 200
     uid = response.json()['session']['user']['id']
-    state = client.get('/api/learner').json()
-    assert state['profile']['display_name'] == 'Ana María'
-    stored = state['avatar_data']
-    assert stored.startswith('data:image/jpeg;base64,')
-    with Image.open(BytesIO(base64.b64decode(stored.split(',')[1]))) as image:
-        assert image.size == (256,256)
-        assert not image.getexif()
-    old_token = client.cookies.get(auth.COOKIE)
-    client.post('/api/auth/logout',json={})
-    signup(client,'second-photo@example.com')
-    assert client.get('/api/learner').json()['avatar_data'] is None
-    assert client.post('/api/account/avatar',json={'avatar_data':uploaded,'user_id':uid}).status_code == 422
-    client.post('/api/auth/logout',json={})
-    client.cookies.set(auth.COOKIE,old_token)
-    assert client.get('/api/learner').status_code == 401
-    client.cookies.clear()
-    assert client.post('/api/auth/login',json=credentials).status_code == 200
-    assert client.get('/api/learner').json()['avatar_data'] == stored
-    assert client.post('/api/account/avatar',json={'avatar_data':invalid}).status_code == 422
-    assert client.get('/api/learner').json()['avatar_data'] == stored
-    assert client.post('/api/account/avatar',json={'avatar_data':None}).status_code == 200
-    assert client.get('/api/learner').json()['avatar_data'] is None
-    assert client.post('/api/account/avatar',json={'avatar_data':uploaded}).status_code == 200
-    assert client.post('/api/account',json={'action':'export'}).json()['avatars'][0]['data_url'] == stored
+    assert 'avatar_data' not in client.get('/api/learner').json()
+    assert client.post('/api/account/avatar',json={'avatar_data':None}).status_code == 404
+    with database() as conn:
+        put(conn,'avatars',uid,uid,{'data_url':'data:image/jpeg;base64,legacy'})
+    exported = client.post('/api/account',json={'action':'export'}).json()
+    assert exported['avatars'][0]['data_url'] == 'data:image/jpeg;base64,legacy'
     assert client.post('/api/account',json={'action':'delete','confirmation':'ELIMINAR'}).status_code == 200
     with database() as conn:
         assert not conn.execute("SELECT 1 FROM records WHERE kind='avatars' AND user_id=?",(uid,)).fetchone()

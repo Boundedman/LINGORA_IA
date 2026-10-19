@@ -10,7 +10,6 @@ input,select,textarea{max-width:100%;min-height:44px;font-size:1rem}
 textarea{min-height:5rem}
 label.check,.answer-option{min-height:44px;align-items:center}
 .check input,.answer-option input{width:20px;height:20px;min-height:20px;flex:0 0 20px;margin:0}
-.photo-picker-controls input{font-size:1rem;min-height:44px}
 img,audio{max-width:100%}
 audio{width:100%;min-width:0}
 .row{flex-wrap:wrap}
@@ -43,7 +42,6 @@ audio{width:100%;min-width:0}
 .small-note{display:flex}.page-top .desktop-only{display:inline-flex!important}
 .setup-banner .text-button{display:inline-flex}
 .dictionary-link{display:inline-flex;align-items:center;min-width:44px;min-height:44px}
-.photo-picker{flex-wrap:wrap;gap:16px}.photo-picker-controls{flex:1 1 12rem}
 .vocabulary-entry .dictionary-link{display:inline-flex;align-items:center;min-height:44px;padding:4px 0}
 .modal-backdrop{top:var(--viewport-top,0px);bottom:auto;height:var(--viewport-height,100dvh);padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,var(--safe-bottom)) max(12px,env(safe-area-inset-left));overflow:auto;overscroll-behavior:contain}
 .modal{max-height:100%;padding:28px;min-width:0;scroll-padding:16px;overscroll-behavior:contain}

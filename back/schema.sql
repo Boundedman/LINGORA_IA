@@ -53,7 +53,7 @@ COMMENT ON COLUMN lingora.resets.token IS 'Hash del token de recuperación de un
 COMMENT ON COLUMN lingora.records.payload IS
     'JSON serializado por FastAPI. TEXT se conserva por compatibilidad con PostgreSQL y SQLite.';
 COMMENT ON TABLE lingora.records IS
-    'Datos por usuario. kind: profiles (nombre, nivel, intereses, minutos diarios, onboarding), lesson_progress (paso, aciertos, intentos, finalización y versión), exercise_attempts (respuestas), reviews (repaso espaciado), diagnostics (evaluación), user_errors (errores), messages (tutor), feedback (reportes), ai_requests (cuotas y consumo), ai_cache (respuestas reutilizables), avatars (foto de perfil privada).';
+    'Datos por usuario. kind: profiles (nombre, nivel, intereses, minutos diarios, onboarding), lesson_progress (paso, aciertos, intentos, finalización y versión), exercise_attempts (respuestas), reviews (repaso espaciado), diagnostics (evaluación), user_errors (errores), messages (tutor), feedback (reportes), ai_requests (cuotas y consumo), ai_cache (respuestas reutilizables). Los registros avatars previos se conservan para exportación y respaldo; la aplicación actual no los muestra.';
 
 -- FastAPI administra el acceso. Estas tablas no tienen acceso público.
 REVOKE ALL ON SCHEMA lingora FROM PUBLIC, anon, authenticated;

@@ -1,0 +1,5 @@
+.landing-card{grid-template-rows:auto 1fr auto auto auto}.landing-explore{grid-column:2;grid-row:5;justify-self:end;padding:8px 0;border:0;background:transparent;color:var(--muted);font-size:12px;text-decoration:underline;text-underline-offset:4px}.landing-explore:hover{color:var(--violet)}
+@media(max-width:680px){.landing-explore{grid-column:1;grid-row:6;justify-self:center}}
+.auth-progress{margin:18px 0;color:var(--muted);font-size:11px}.auth-progress strong{color:var(--violet)}.auth-progress-track{height:6px;margin-top:8px;background:var(--surface-soft);border-radius:99px;overflow:hidden}.auth-progress-fill{height:100%;width:100%;background:var(--primary);border-radius:inherit;transform-origin:left center}
+.modal .error,.modal .notice{animation:auth-feedback .2s ease-out both}@keyframes auth-feedback{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.landing-loading{width:min(100%,420px);display:grid;justify-items:center;gap:16px;padding:48px 24px;background:var(--surface);border:1px solid var(--line);border-radius:20px}.landing-loading .brand{font-size:25px}.landing-loading p{margin:0;color:var(--muted);font-size:13px}
