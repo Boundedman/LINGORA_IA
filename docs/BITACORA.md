@@ -792,3 +792,15 @@ Se registrarán las nuevas solicitudes de esta conversación con su resultado y 
     > haz el push con la skill dual push a los repositorios de github
   - **Resumen:** Publicado el commit de implementación `dc145caf12e2dad9f3bb9903cb75873dff16ae89` en ambos `main`. Tras sincronizar este resultado de bitácora, el commit `0295f5291e8adf56d3e01a3862db31d0363d3fd5` quedó verificado en los dos repositorios mediante `git ls-remote`. Se excluyó `inicio-sesion.md`; no se afirma que el despliegue se haya completado.
   - **Archivos modificados:** Cambios descritos en la entrada anterior y este registro de publicación.
+
+- [x] **2026-11-16 — Actualizar el proyecto con git pull**
+  - **Prompt:**
+    > Haz un git pull del repositorio donde esta guardado este proyecto para que quede actualizado
+  - **Resumen:** Ejecutado `git pull --ff-only origin main`; avance rápido desde `4626442` hasta `6582320`. Se incorporaron actualizaciones de configuración de despliegue y el traslado de `AGENTS.md`, `BITACORA.md` y `PROMT_CHAT_DE_VOZ.md` a `docs/`. `inicio-sesion.md` permaneció sin seguimiento y sin cambios. Rama `main` sincronizada con `origin/main`.
+  - **Archivos modificados:** `docs/BITACORA.md`.
+
+- [x] **2026-11-16 — Verificar versión local frente a GitHub**
+  - **Prompt:**
+    > analiza el proyecto que esta abierto para verificar que es la misma version que esta en github
+  - **Resumen:** La rama local `main` y `origin/main` coinciden en `658232094426d136193dcef9dd642b11768cec1a`, también verificado contra GitHub. El remoto personal `Boundedman/LINGORA_IA` permanece en `462644275b153d034ed46acfdc2f9b3477f9c9a8`, por lo que no está al día con origin. El árbol de trabajo contiene una modificación local en esta bitácora y `inicio-sesion.md` sin seguimiento; por tanto, el contenido local completo no es idéntico al commit publicado.
+  - **Archivos modificados:** `docs/BITACORA.md`.
